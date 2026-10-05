@@ -23,6 +23,7 @@
   "config": {
     "parasites": 1,
     "parity": true,
+    "singleRound": false,
     "discussionMinutes": 3,
     "operations": [
       "tip",

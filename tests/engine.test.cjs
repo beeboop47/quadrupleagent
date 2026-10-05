@@ -10,7 +10,7 @@ function forceTeams(g,parasites=['p5']){g.players.forEach(p=>p.team=parasites.in
 function voting(g,votes){g.phase='discussion';E.startVoting(g);while(g.phase==='voting'){const id=g.voters[g.cursor];E.vote(g,votes[id]);}return g.tally;}
 
 test('Full and Confident contain exactly the requested content',()=>{
-  assert.equal(C.presets[0].config.operations.length,9);assert.equal(C.presets[0].config.specials.length,2);
+  assert.equal(C.presets[0].config.operations.length,9);assert.equal(C.presets[0].config.specials.length,5);
   const conf=C.presets[1].config;assert.equal(conf.operations.length,7);assert.deepEqual(conf.specials,[]);
   assert(!conf.operations.includes('defector'));assert(!conf.operations.includes('transfer'));assert(!conf.agendas.includes('sleeper'));assert(conf.operations.includes('agenda'));
 });
@@ -22,7 +22,8 @@ test('No random duplicate operations and no random duplicate special roles',()=>
   for(let n=3;n<=9;n++)for(let seed=1;seed<=30;seed++){
     const g=E.createGame(roster(n),C.presets[0].config,seeded(seed));E.finishBriefing(g);E.startRound(g,seeded(seed+90));
     assert.equal(new Set(g.turns.map(t=>t.operation)).size,n);
-    for(const s of C.specials)assert.equal(g.players.filter(p=>p.special===s.id).length,1);
+    const assigned=g.players.map(p=>p.special).filter(Boolean);assert.equal(assigned.length,Math.min(n,C.specials.length));assert.equal(new Set(assigned).size,assigned.length);
+    if(n>=C.specials.length)for(const s of C.specials)assert.equal(g.players.filter(p=>p.special===s.id).length,1);
   }
 });
 test('Special roles default off and an enabled role is always assigned',()=>{

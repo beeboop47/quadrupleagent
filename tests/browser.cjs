@@ -5,13 +5,13 @@ const path=require('node:path');
 const C=require('../src/catalogue.js');
 const E=require('../src/engine.js');
 const KEY='quadruple-agent.v1';
-const url='http://127.0.0.1:4173/';
+const url=process.env.QA_TEST_URL||'http://127.0.0.1:4173/';
 const outputs=path.resolve(__dirname,'../artifacts');fs.mkdirSync(outputs,{recursive:true});
 const roster=Array.from({length:5},(_,i)=>({id:`p${i+1}`,name:['Alex','Blair','Casey','Drew','Ellis'][i]}));
 const assignments=Object.fromEntries(roster.map((p,i)=>[p.id,{team:i===4?'parasites':'force',special:'none'}]));
 const click=(p,a)=>p.locator(`[data-action="${a}"]`).first().click();
 async function seed(p,config,game=null,people=roster){await p.evaluate(({KEY,roster,config,game})=>{localStorage.setItem(KEY,JSON.stringify({roster,config,game,customs:[],presetId:'custom'}));Storage.prototype.setItem=()=>{};},{KEY,roster:people,config,game});await p.reload();}
-async function brief(p,n=5){await click(p,'start');for(let i=0;i<n;i++){await click(p,'reveal');const text=await p.locator('#main').innerText();assert(!text.includes('Deep Cover Agent'));assert(!text.includes('Suspicious Agent'));assert(!text.includes('No special role'));await click(p,'brief-next');}assert.match(await p.locator('#main').innerText(),/New round/);}
+async function brief(p,n=5){await click(p,'start');for(let i=0;i<n;i++){await click(p,'reveal');const text=await p.locator('#main').innerText();for(const role of C.specials)assert(!text.includes(role.name));assert(!text.includes('No special role'));await click(p,'brief-next');}assert.match(await p.locator('#main').innerText(),/New round/);assert(!/manual mode|overrides/i.test(await p.locator('#main').innerText()));assert.equal(await p.locator('#main [data-action="game-overrides"]').count(),0);}
 async function completeOps(p){
   let turns=0;
   while(await p.locator('[data-action="reveal"]').count()){
@@ -40,7 +40,8 @@ let debugPage;
   await page.screenshot({path:path.join(outputs,'setup-mobile.png'),fullPage:true});
   assert.equal(await page.title(),'Quadruple Agent');
   assert.deepEqual(await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).config.specials,KEY),[]);
-  await page.locator('[data-action="preset"][data-id="full"]').click();assert.equal((await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).config.specials,KEY)).length,2);
+  await click(page,'settings');await page.locator('#single-round').check();await click(page,'settings-done');await page.reload();await click(page,'settings');assert(await page.locator('#single-round').isChecked());await page.locator('#single-round').uncheck();await click(page,'settings-done');
+  await page.locator('[data-action="preset"][data-id="full"]').click();assert.equal((await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).config.specials,KEY)).length,5);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.locator('[data-action="preset"][data-id="confident"]').click();
   const config=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).config,KEY);assert.equal(config.operations.length,7);assert.equal(config.specials.length,0);assert(!config.agendas.includes('sleeper'));
@@ -66,7 +67,8 @@ let debugPage;
   for(let i=0;i<5;i++){await click(page,'reveal');const target=i===3?'p1':'p4';await page.locator(`[data-action="target"][data-id="${target}"]`).click();await click(page,'cast-vote');if(i<4)assert(!await page.locator('.target-list').count());}
   assert.match(await page.locator('#main').innerText(),/Drew is jailed/);assert(!await page.locator('#main').innerText().then(t=>t.includes('Operation Scapegoat')));
   stored=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)),KEY);assert.equal(stored.game.tally.totals.p1,2);assert.equal(stored.game.players[3].secured[0].id,'scapegoat');
-  await page.screenshot({path:path.join(outputs,'votes-mobile.png'),fullPage:true});await click(page,'game-overrides');await click(page,'overrides-save');await click(page,'round-start');await click(page,'reveal');stored=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)),KEY); // Targets prepared in memory; result persistence confirms replacement below.
+  assert(!/manual mode|overrides/i.test(await page.locator('#main').innerText()));assert.equal(await page.locator('#main [data-action="game-overrides"]').count(),0);
+  await page.screenshot({path:path.join(outputs,'votes-mobile.png'),fullPage:true});await click(page,'settings');await click(page,'game-overrides');await click(page,'overrides-save');await click(page,'round-start');await click(page,'reveal');stored=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)),KEY); // Targets prepared in memory; result persistence confirms replacement below.
   await click(page,'operate');await click(page,'reveal');stored=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)),KEY);assert(!stored.game.turns[0].targets.includes('p4'));assert.equal(stored.game.turns.length,4);console.log('PASS anonymous voting, immediate personal win, in-game overrides and jailed-target fallback');
   await click(page,'op-next');await completeOps(page);await click(page,'voting-start');
   const votes={p1:'p5',p2:'p5',p3:'p5',p5:'p1'};
@@ -85,6 +87,13 @@ let debugPage;
   await seed(page,smallConfig,null,three);await brief(page,3);await click(page,'round-start');await completeOps(page);await click(page,'voting-start');
   for(const id of ['p2','p1','p2']){await click(page,'reveal');await page.locator(`[data-action="target"][data-id="${id}"]`).click();await click(page,'cast-vote');}
   assert.match(await page.locator('#main').innerText(),/Two or fewer players/);await click(page,'final-results');assert.match(await page.locator('#main').innerText(),/Parasites win/);console.log('PASS mandatory two-player ending with parity disabled');await click(page,'play-again');
+  const singleConfig={...C.defaults,singleRound:true};const singleGame=E.createGame(roster,singleConfig);singleGame.players.forEach(p=>p.team=['p4','p5'].includes(p.id)?'parasites':'force');singleGame.round=1;singleGame.phase='discussion';
+  await seed(page,singleConfig,singleGame);await click(page,'resume');await click(page,'voting-start');
+  for(const id of ['p5','p5','p5','p5','p1']){await click(page,'reveal');await page.locator(`[data-action="target"][data-id="${id}"]`).click();await click(page,'cast-vote');}
+  assert.equal(await page.locator('[data-action="round-start"]').count(),0);await click(page,'final-results');assert.match(await page.locator('#main').innerText(),/Force win/);await click(page,'play-again');
+  const tiedGame=E.createGame(roster,singleConfig);tiedGame.round=1;tiedGame.phase='discussion';await seed(page,singleConfig,tiedGame);await click(page,'resume');await click(page,'voting-start');
+  for(const id of ['p2','p3','p4','p5','p1']){await click(page,'reveal');await page.locator(`[data-action="target"][data-id="${id}"]`).click();await click(page,'cast-vote');}
+  await click(page,'final-results');assert.match(await page.locator('#main').innerText(),/No team wins/);assert.equal(await page.locator('.result-detail .chip').filter({hasText:'DRAW'}).count(),5);await click(page,'play-again');console.log('PASS saved one-voting-round option, decisive team victory and tied-game draw');
   for(const [width,height,label] of [[320,568,'small'],[1440,900,'desktop']]){await page.setViewportSize({width,height});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.screenshot({path:path.join(outputs,`setup-${label}.png`),fullPage:true});}
   // Verify direct-file delivery has no external requests or asset dependencies.
   const offline=await browser.newContext({viewport:{width:390,height:844},offline:true});const file=await offline.newPage();file.on('pageerror',e=>errors.push(e.message));await file.goto('file:///'+path.resolve(__dirname,'../index.html').replace(/\\/g,'/'));assert.equal(await file.locator('[data-action="start"]').count(),1);await click(file,'start');assert.match(await file.locator('#main').innerText(),/Private handover/i);console.log('PASS offline single-file launch');

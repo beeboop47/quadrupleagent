@@ -20,10 +20,13 @@
   ];
   const specials = [
     {id:'suspicious',name:'Suspicious Agent',description:'While you are Force, information operations see you as a Parasite.'},
-    {id:'cover',name:'Deep Cover Agent',description:'While you are a Parasite, information operations see you as Force.'}
+    {id:'cover',name:'Deep Cover Agent',description:'While you are a Parasite, information operations see you as Force.'},
+    {id:'source',name:'Unreliable Source',description:'Your Anonymous Tip, Secret Intel, Unfortunate Encounter and Danish Intelligence always give the opposite answer. Confession stays truthful.'},
+    {id:'fixed',name:'Fixed Asset',description:'Spy Transfer involving you leaves both players’ teams unchanged, while still reporting completion.'},
+    {id:'counterintel',name:'Counterintelligence Officer',description:'Your information operations use actual allegiances, bypassing Suspicious Agent and Deep Cover Agent. Confession remains truthful.'}
   ];
   const all = list => list.map(x=>x.id);
-  const defaults = {parasites:1,parity:true,discussionMinutes:3,operations:all(operations),agendas:all(agendas),specials:[],manual:false,assignments:{},overrides:[]};
+  const defaults = {parasites:1,parity:true,singleRound:false,discussionMinutes:3,operations:all(operations),agendas:all(agendas),specials:[],manual:false,assignments:{},overrides:[]};
   const presets = [
     {id:'full',name:'Full',description:'Every operation & special role',config:{...defaults,specials:all(specials)}},
     {id:'confident',name:'Confident',description:'Stable teams. Clean intelligence.',config:{...defaults,operations:all(operations).filter(id=>!['defector','transfer'].includes(id)),agendas:all(agendas).filter(id=>id!=='sleeper'),specials:[]}}

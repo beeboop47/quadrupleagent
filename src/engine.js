@@ -8,13 +8,15 @@
   function shuffle(list,rng=Math.random){const a=[...list];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
   const active=g=>g.players.filter(p=>!p.jailed);
   const player=(g,id)=>g.players.find(p=>p.id===id);
-  const apparent=p=>p.special==='suspicious'&&p.team==='force'?'parasites':p.special==='cover'&&p.team==='parasites'?'force':p.team;
+  const hasSpecial=(p,id)=>p.special===id||(Array.isArray(p.specials)&&p.specials.includes(id));
+  const apparent=p=>hasSpecial(p,'suspicious')&&p.team==='force'?'parasites':hasSpecial(p,'cover')&&p.team==='parasites'?'force':p.team;
   const other=team=>team==='force'?'parasites':'force';
   function cleanConfig(raw={}){
     const cfg={...clone(C.defaults),...clone(raw)};
     for(const [key,list] of [['operations',C.operations],['agendas',C.agendas],['specials',C.specials]])cfg[key]=Array.isArray(cfg[key])?[...new Set(cfg[key].filter(id=>lookup(list,id)))]:list.map(x=>x.id);
     cfg.parasites=Math.max(1,Math.min(8,Math.floor(Number(cfg.parasites)||1)));
     cfg.parity=cfg.parity!==false;cfg.manual=cfg.manual===true;
+    cfg.singleRound=cfg.singleRound===true;
     cfg.discussionMinutes=Math.max(0,Math.min(30,Number(cfg.discussionMinutes)||0));
     cfg.assignments=cfg.assignments&&typeof cfg.assignments==='object'&&!Array.isArray(cfg.assignments)?cfg.assignments:{};
     cfg.overrides=Array.isArray(cfg.overrides)?cfg.overrides:[];
@@ -53,10 +55,15 @@
     const needed=unassigned.length?Math.max(0,config.parasites-fixedParasites):0;
     if(needed>unassigned.length)fail('Starting Parasite count conflicts with the manually assigned Force players. Lower the count or free a team assignment.');
     unassigned.forEach((p,i)=>p.team=i<needed?'parasites':'force');
-    for(const id of config.specials){
+    // Small groups receive a random subset of enabled roles, one per player.
+    // Manual roles reserve their type and player before the remaining roles are dealt.
+    for(const id of shuffle(config.specials,rng)){
       if(players.some(p=>p.special===id))continue;
       const eligible=players.filter(p=>p.special===null);
-      if(!eligible.length)fail('An enabled special role needs an available player. Free a manual special-role assignment or disable that role.');
+      if(!eligible.length){
+        if(players.length<config.specials.length)break;
+        fail('An enabled special role needs an available player. Free a manual special-role assignment or disable that role.');
+      }
       shuffle(eligible,rng)[0].special=id;
     }
     for(const p of players){if(p.special==='none')p.special=null;p.initialTeam=p.team;}
@@ -65,14 +72,16 @@
   }
   function teamWinner(g){
     const alive=active(g);const parasites=alive.filter(p=>p.team==='parasites').length;
+    if(alive.length<=2)return parasites?{team:'parasites',reason:'Two or fewer players remain, with a Parasite still active.'}:{team:'force',reason:'Every active Parasite has been removed.'};
+    if(g.config.singleRound)return null;
     if(!parasites)return {team:'force',reason:'Every active Parasite has been removed.'};
-    if(alive.length<=2)return {team:'parasites',reason:'Two or fewer players remain, with a Parasite still active.'};
     if(g.config.parity&&parasites>=alive.length-parasites)return {team:'parasites',reason:'Parasites equal or outnumber the active Force.'};
     return null;
   }
   function checkEnd(g){const end=teamWinner(g);if(end){g.winner=end.team;g.endingReason=end.reason;g.phase='ended';return true;}return false;}
   function finishBriefing(g){if(g.phase!=='briefing')fail('Briefing is not active.');g.phase='round-ready';g.cursor=0;checkEnd(g);}
   function startRound(g,rng=Math.random){
+    if(g.winner)fail('The game has already ended.');
     if(!['round-ready','results'].includes(g.phase))fail('Finish the current round first.');
     if(checkEnd(g))return;
     const alive=active(g);const round=g.round+1;const overrides=validateRound(g.config,round,alive);
@@ -104,14 +113,19 @@
     const picked=turn.targets!==null?turn.targets:resolveTargets(g,p.id,op.targets,targets,rng);
     if(op.kind==='choose'&&turn.targets===null&&(!Array.isArray(targets)||targets.length!==op.targets||new Set(targets).size!==targets.length||targets.some(id=>!active(g).some(t=>t.id===id&&id!==p.id))))fail(`Choose ${op.targets} different active player${op.targets===1?'':'s'}.`);
     turn.targets=picked;const people=picked.map(id=>player(g,id));let result;
+    const seenTeam=target=>hasSpecial(p,'counterintel')?target.team:apparent(target);
+    const invert=answer=>hasSpecial(p,'source')?!answer:answer;
     switch(op.id){
-      case 'tip':result={type:'intel',team:['force','parasites'].includes(forced)?forced:apparent(people[0]),targets:picked};break;
+      case 'tip':{
+        const natural=seenTeam(people[0]);
+        result={type:'intel',team:['force','parasites'].includes(forced)?forced:hasSpecial(p,'source')?other(natural):natural,targets:picked};break;
+      }
       case 'confession':result={type:'confession',team:['force','parasites'].includes(forced)?forced:p.team,targets:picked};break;
       case 'intel':case 'encounter':{
         const group=op.id==='encounter'?[p,...people]:people;
-        result={type:'presence',parasite:['yes','no'].includes(forced)?forced==='yes':group.some(t=>apparent(t)==='parasites'),targets:picked};break;
+        result={type:'presence',parasite:['yes','no'].includes(forced)?forced==='yes':invert(group.some(t=>seenTeam(t)==='parasites')),targets:picked};break;
       }
-      case 'danish':result={type:'match',same:['same','different'].includes(forced)?forced==='same':apparent(people[0])===apparent(people[1]),targets:picked};break;
+      case 'danish':result={type:'match',same:['same','different'].includes(forced)?forced==='same':invert(seenTeam(people[0])===seenTeam(people[1])),targets:picked};break;
       case 'evidence':{
         const effect=['shield','double'].includes(forced)?forced:choice;
         if(!['shield','double'].includes(effect))fail('Choose protection or a double vote.');
@@ -125,7 +139,9 @@
         result={type:'defector',switched:decision==='switch',team:p.team,defector:p.defector};break;
       }
       case 'transfer':{
-        const team=p.team;switchTeam(p,people[0].team);switchTeam(people[0],team);
+        if(!hasSpecial(p,'fixed')&&!hasSpecial(people[0],'fixed')){
+          const team=p.team;switchTeam(p,people[0].team);switchTeam(people[0],team);
+        }
         result={type:'transfer',targets:picked};break;
       }
       case 'agenda':{
@@ -175,7 +191,8 @@
     // Public results contain totals and an actual jailing reveal, never voter identities or private operations.
     g.tally={round:g.round,totals,raw,jailed:jailed?.id||null,reveal:jailed?.team||null,tie:leaders.length>1,noVotes:max===0};
     g.history.push(clone(g.tally));g.phase='results';g.cursor=0;
-    const end=teamWinner(g);if(end){g.winner=end.team;g.endingReason=end.reason;}
+    const end=g.config.singleRound?{team:jailed?other(jailed.team):'draw',reason:jailed?`${jailed.name} was jailed as ${jailed.team==='force'?'Force':'a Parasite'}. The one-voting-round rule gives ${jailed.team==='force'?'the Parasites':'the Force'} victory.`:'The voting round ended without anyone being jailed. Neither team wins.'}:teamWinner(g);
+    if(end){g.winner=end.team;g.endingReason=end.reason;}
     return g.tally;
   }
   function outcomes(g){
@@ -184,23 +201,23 @@
     for(const p of g.players){
       if(p.disqualified)status.set(p.id,{win:false,reason:'A Parasite teammate voted for this Parasite Defector.'});
       else if(p.secured.length)status.set(p.id,{win:true,reason:`Personal win secured: ${lookup(C.agendas,p.secured[0].id).name}.`});
-      else if(!p.agenda)status.set(p.id,{win:p.team===g.winner,reason:`${p.team==='force'?'Force':'Parasites'} allegiance at game end.`});
+      else if(!p.agenda)status.set(p.id,{win:p.team===g.winner,draw:g.winner==='draw',reason:g.winner==='draw'?'Neither team won the voting round.':`${p.team==='force'?'Force':'Parasites'} allegiance at game end.`});
       else if(['scapegoat','grudge'].includes(p.agenda.id))status.set(p.id,{win:false,reason:'Personal jailing condition was not fulfilled.'});
     }
     // Infatuation follows the target's personal result. A closed cycle has no independent result;
     // its members use their own final team result. Documented in the field guide.
     const pending=g.players.filter(p=>!status.has(p.id));
     let progress=true;
-    while(progress){progress=false;for(const p of pending){if(status.has(p.id))continue;const target=status.get(p.agenda.target);if(target){status.set(p.id,{win:target.win,reason:`Shares ${player(g,p.agenda.target).name}'s result.`});progress=true;}}}
+    while(progress){progress=false;for(const p of pending){if(status.has(p.id))continue;const target=status.get(p.agenda.target);if(target){status.set(p.id,{win:target.win,draw:!!target.draw,reason:`Shares ${player(g,p.agenda.target).name}'s result.`});progress=true;}}}
     for(const p of pending)if(!status.has(p.id)){
       const path=[];let current=p;
       while(current&&!status.has(current.id)&&!path.includes(current.id)){path.push(current.id);current=player(g,current.agenda?.target);}
       const cycleAt=current?path.indexOf(current.id):-1;
-      if(cycleAt>=0)for(const id of path.slice(cycleAt)){const member=player(g,id);status.set(id,{win:member.team===g.winner,reason:'Infatuation loop: final team result applies.'});}
-      for(let i=path.length-1;i>=0;i--)if(!status.has(path[i])){const member=player(g,path[i]);const target=status.get(member.agenda?.target);status.set(member.id,{win:target?target.win:member.team===g.winner,reason:target?`Shares ${player(g,member.agenda.target).name}'s result.`:'Final team result applies.'});}
+      if(cycleAt>=0)for(const id of path.slice(cycleAt)){const member=player(g,id);status.set(id,{win:member.team===g.winner,draw:g.winner==='draw',reason:'Infatuation loop: final team result applies.'});}
+      for(let i=path.length-1;i>=0;i--)if(!status.has(path[i])){const member=player(g,path[i]);const target=status.get(member.agenda?.target);status.set(member.id,{win:target?target.win:member.team===g.winner,draw:target?!!target.draw:g.winner==='draw',reason:target?`Shares ${player(g,member.agenda.target).name}'s result.`:'Final team result applies.'});}
     }
     return g.players.map(p=>({id:p.id,name:p.name,team:p.team,special:p.special,jailed:p.jailed,agenda:p.agenda,defector:p.defector,...status.get(p.id)}));
   }
-  const api={clone,shuffle,cleanConfig,createGame,validateRound,active,player,apparent,teamWinner,checkEnd,finishBriefing,startRound,prepareTurn,resolveTargets,runOperation,finishTurn,startVoting,vote,resolveVotes,outcomes};
+  const api={clone,shuffle,cleanConfig,createGame,validateRound,active,player,hasSpecial,apparent,teamWinner,checkEnd,finishBriefing,startRound,prepareTurn,resolveTargets,runOperation,finishTurn,startVoting,vote,resolveVotes,outcomes};
   root.QAEngine=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(globalThis);
