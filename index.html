@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111512">
+  <meta name="description" content="Quadruple Agent: a shared-phone social deduction game for the Force and the Parasites.">
+  <title>Quadruple Agent</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23111512'/%3E%3Cpath d='M6 6h8v8H6zm12 0h8v8h-8zM6 18h8v8H6zm12 0h8v8h-8z' fill='%23d7fa77'/%3E%3C/svg%3E">
+  <style>
+    :root{color-scheme:dark;--bg:#111512;--panel:#1a201b;--panel2:#222a23;--line:#343e34;--ink:#f1f4e9;--muted:#a4afa0;--accent:#d7fa77;--red:#ff917e;--blue:#a5caff;--radius:18px;font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:16px}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);line-height:1.5;min-height:100svh}button,input,select,textarea{font:inherit}button{cursor:pointer;touch-action:manipulation}button:disabled{cursor:not-allowed;opacity:.45}a{color:var(--accent)}button,input,select,textarea{outline-offset:4px}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent)}input,select,textarea{width:100%;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;min-height:48px;padding:11px 13px}input[type=checkbox]{width:22px;min-height:22px;accent-color:var(--accent);flex-shrink:0}input[type=number]{appearance:textfield}label{display:block;color:var(--muted);font-size:.875rem}label input,label select{margin-top:6px}h1,h2,h3,p{margin-top:0}h2{font-size:1.65rem;line-height:1.2;letter-spacing:-.035em}h3{font-size:1rem}p{margin-bottom:16px}.muted{color:var(--muted)}.small{font-size:.875rem}.micro{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase}.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}strong{font-weight:650}.accent{color:var(--accent)}.red{color:var(--red)}.blue{color:var(--blue)}
+    .app{max-width:1060px;margin:auto;padding:24px 28px 40px;padding-top:max(22px,env(safe-area-inset-top));padding-bottom:max(32px,env(safe-area-inset-bottom))}.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:42px;gap:16px}.brand{display:flex;align-items:center;gap:11px;font-size:.875rem;font-weight:600;letter-spacing:.02em}.mark{display:grid;grid-template-columns:repeat(2,8px);gap:3px}.mark i{display:block;width:8px;height:8px;background:var(--accent)}.top-actions{display:flex;gap:8px}.icon-btn,.pill{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:999px;min-height:44px;padding:9px 15px;font-size:.875rem}.icon-btn:hover,.pill:hover{background:var(--panel2)}.title{font-size:clamp(3.4rem,8vw,5.4rem);font-weight:850;line-height:.96;letter-spacing:-.065em;margin:12px 0 20px}.title span{color:var(--accent)}.eyebrow{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:.75rem;text-transform:uppercase;letter-spacing:.15em}.eyebrow:before{content:"";height:1px;width:24px;background:var(--accent)}.setup-grid{display:grid;grid-template-columns:1.1fr .85fr;gap:60px;align-items:start}.intro{max-width:430px;color:var(--muted);margin-bottom:30px}.panel{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:24px}.panel+.panel{margin-top:16px}.panel-title{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px}.panel-title h2,.panel-title h3{margin:0}.count{background:var(--panel2);padding:5px 10px;border-radius:6px;color:var(--accent);font-size:.75rem;font-family:ui-monospace,monospace}.stack{display:grid;gap:12px}.row{display:flex;align-items:center;gap:12px}.between{justify-content:space-between}.player-row{display:flex;align-items:center;gap:12px}.player-number{color:var(--muted);font-size:.75rem;font-family:ui-monospace,monospace;min-width:18px}.player-row input{background:var(--panel)}.remove{width:40px;height:44px;border:0;background:transparent;color:var(--muted);font-size:1.3rem}.add{background:transparent;color:var(--accent);border:1px dashed var(--line);width:100%;min-height:48px;border-radius:10px;margin-top:12px}.btn{border:0;background:var(--accent);color:#16200a;font-weight:700;min-height:54px;border-radius:12px;padding:14px 20px;display:inline-flex;align-items:center;justify-content:center;gap:10px}.btn:hover{filter:brightness(1.06)}.btn.secondary{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}.btn.danger{background:#472c27;color:var(--red);border:1px solid #775047}.btn.ghost{background:transparent;color:var(--muted);font-weight:500;min-height:44px}.wide{width:100%}.launch{margin-top:26px}.launch-note{text-align:center;margin:12px 0 0;font-size:.75rem;color:var(--muted)}.presets{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}.preset{background:var(--panel);border:1px solid var(--line);color:var(--ink);text-align:left;border-radius:12px;padding:14px 16px;min-height:86px}.preset.selected{border-color:var(--accent);background:#252d1b}.preset b{display:block;font-size:1rem;margin-bottom:5px}.preset span{font-size:.875rem;color:var(--muted);display:block}.preset.selected b{color:var(--accent)}.setting-row{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:16px 0;border-top:1px solid var(--line)}.setting-row label{font-size:1rem;color:var(--ink)}.stepper{display:flex;align-items:center;gap:15px}.stepper button{width:36px;height:36px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:8px}.stepper span{min-width:12px;text-align:center;font-family:ui-monospace,monospace}.rule{display:flex;gap:15px;padding:18px 0;border-top:1px solid var(--line)}.rule:first-of-type{border-top:0}.rule .number{font-family:ui-monospace,monospace;color:var(--accent);font-size:.875rem;margin-top:2px}.rule b{display:block;font-size:1rem;margin-bottom:3px}.rule p{font-size:.875rem;color:var(--muted);margin:0}.team-line{display:flex;align-items:center;justify-content:space-between;padding-top:18px;margin-top:4px;border-top:1px solid var(--line)}.chip{font-size:.75rem;border:1px solid var(--line);padding:5px 9px;border-radius:6px;white-space:nowrap}.chip.force{color:var(--blue);border-color:#4a6080}.chip.parasites{color:var(--red);border-color:#805048}.footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:15px;color:var(--muted);font-size:.75rem}.error{background:#3b251f;color:#ffc2b3;border:1px solid #765045;padding:12px 15px;border-radius:10px;margin:15px 0}.notice{padding:13px 15px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--muted);font-size:.875rem;margin:16px 0}.divider{border:0;border-top:1px solid var(--line);margin:24px 0}.check-row{display:flex;gap:12px;align-items:start;padding:14px 0;border-bottom:1px solid var(--line)}.check-row label{color:var(--ink);font-size:1rem;flex:1;cursor:pointer}.check-row p{font-size:.875rem;color:var(--muted);margin:3px 0 0}.check-row input{margin-top:3px}.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field-grid .full{grid-column:1/-1}.tabbar{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-bottom:24px}.tabbar button{flex-shrink:0;min-height:44px;padding:9px 14px;color:var(--muted);border:1px solid var(--line);background:transparent;border-radius:8px}.tabbar button.active{background:var(--accent);color:#18210d;border-color:var(--accent)}.empty{border:1px dashed var(--line);padding:24px;border-radius:12px;text-align:center;color:var(--muted)}
+    dialog{width:min(620px,calc(100% - 24px));max-height:90svh;border:1px solid var(--line);border-radius:22px;padding:0;background:var(--panel);color:var(--ink)}dialog::backdrop{background:#080b09b8;backdrop-filter:blur(5px)}.modal-head{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;z-index:1}.modal-head h2{margin:0;font-size:1.3rem}.modal-body{padding:24px}.modal-foot{display:flex;gap:10px;margin-top:24px}.modal-foot .btn{flex:1}.override{border:1px solid var(--line);padding:16px;border-radius:12px;margin-bottom:12px}.override h3{margin:0 0 12px}.override .remove{float:right;margin-top:-8px}.toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--accent);color:#16200a;padding:13px 18px;border-radius:10px;z-index:20;max-width:calc(100% - 32px);box-shadow:0 10px 40px #0006}.phase-strip{display:flex;gap:8px;margin-bottom:30px;justify-content:center;flex-wrap:wrap}.phase-strip span{font-size:.75rem;color:var(--muted);padding:7px 12px;border:1px solid var(--line);border-radius:6px}.phase-strip .current{color:var(--accent);border-color:#77874c;background:#252d1b}.game-view{max-width:580px;margin:auto}.game-view h1{font-size:2.4rem;line-height:1.08;letter-spacing:-.045em}.game-view .eyebrow{margin-bottom:18px}.secret{border:1px solid #647542;background:linear-gradient(145deg,#26331e,#1a2218);border-radius:var(--radius);padding:30px 24px;margin:24px 0;position:relative;overflow:hidden}.secret.parasites{background:linear-gradient(145deg,#3c2924,#251c19);border-color:#845648}.secret.force{background:linear-gradient(145deg,#243044,#191f29);border-color:#4a6080}.secret .team-name{font-size:2.5rem;font-weight:850;line-height:1.15;letter-spacing:-.04em;margin:10px 0 15px}.secret h2{font-size:1.8rem}.secret p:last-child{margin-bottom:0}.handover{text-align:center;padding:22px 0}.handover .eyebrow{justify-content:center}.seal{width:92px;height:92px;margin:5px auto 28px;border:1px solid var(--line);border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--panel)}.seal svg{width:32px;height:32px;stroke:var(--accent);stroke-width:1.4;fill:none}.handover h1{font-size:2.8rem;margin-bottom:14px;overflow-wrap:anywhere}.handover .btn{margin-top:22px}.progress{height:3px;width:100%;background:var(--panel2);border-radius:5px;margin:26px 0}.progress i{display:block;height:100%;background:var(--accent);border-radius:5px}.target-list{display:grid;gap:10px;margin:22px 0}.target{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;min-height:60px;padding:13px 16px;display:flex;gap:12px;align-items:center;text-align:left}.target.selected{border-color:var(--accent);background:#252d1b}.target .avatar{width:30px;height:30px;border-radius:7px;background:var(--panel2);font-family:ui-monospace,monospace;font-size:.75rem;display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0}.target .target-name{flex:1;overflow-wrap:anywhere}.target .selection{width:19px;height:19px;border:1px solid var(--line);border-radius:50%;flex-shrink:0}.target.selected .selection{background:var(--accent);border-color:var(--accent)}.big-result{font-size:1.8rem;line-height:1.25;font-weight:750;letter-spacing:-.025em;margin:14px 0;overflow-wrap:anywhere}.results-row{display:flex;align-items:center;gap:12px;padding:15px 0;border-bottom:1px solid var(--line)}.results-row .name{flex:1;overflow-wrap:anywhere}.vote-total{font-size:1.5rem;min-width:28px;text-align:right;font-family:ui-monospace,monospace}.public-roster{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}.public-roster span{border:1px solid var(--line);border-radius:7px;padding:7px 10px;font-size:.875rem}.public-roster .jailed{color:var(--muted);text-decoration:line-through}.result-detail{background:var(--panel);border:1px solid var(--line);padding:18px;border-radius:12px;margin:12px 0}.result-detail h3{margin-bottom:4px}.result-detail p{margin:0}.timer{font-size:3.5rem;font-family:ui-monospace,monospace;color:var(--accent);letter-spacing:-.06em;margin:12px 0}.center{text-align:center}.sides{display:flex;gap:12px}.sides>*{flex:1}.unclassified{border:1px solid #69764c;color:var(--accent);font-family:ui-monospace,monospace;font-size:.75rem;letter-spacing:.1em;padding:5px 8px;display:inline-block;transform:rotate(-3deg)}.help-entry{padding:18px 0;border-bottom:1px solid var(--line)}.help-entry h3{margin-bottom:6px}.help-entry p{margin:0;color:var(--muted);font-size:.875rem}.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+    @media(max-width:720px){.app{padding-left:20px;padding-right:20px}.topbar{margin-bottom:32px}.setup-grid{grid-template-columns:1fr;gap:28px}.title{font-size:4rem;margin-bottom:18px}.intro{margin-bottom:24px}.setup-aside{display:none}.panel{padding:20px}.footer{margin-top:26px}.topbar .brand{font-size:.8rem}.icon-btn{padding:9px 12px}.game-view h1{font-size:2.1rem}.handover h1{font-size:2.6rem}.modal-body{padding:20px}.modal-head{padding:18px 20px}.phase-strip{margin-bottom:24px;gap:6px}.phase-strip span{padding:6px 9px}.secret{padding:24px 20px}.game-view{padding-top:0}}
+    @media(max-width:360px){.app{padding-left:15px;padding-right:15px}.title{font-size:3.4rem}.topbar{gap:8px}.brand{gap:8px}.field-grid{grid-template-columns:1fr}.field-grid .full{grid-column:auto}.sides{flex-direction:column}}
+    @media(prefers-reduced-motion:no-preference){button{transition:background .15s,border-color .15s}.game-view{animation:appear .2s ease-out}@keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar"><div class="brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span> QUADRUPLE AGENT</div><div class="top-actions"><button class="icon-btn" data-action="help">Field guide</button><button class="icon-btn" id="settings-button" data-action="settings">Settings</button></div></header>
+    <main id="main"></main>
+    <footer class="footer"><span class="mono">QA / LOCAL DIVISION</span><span>One phone. Many secrets.</span></footer>
+  </div>
+  <dialog id="modal" aria-labelledby="modal-title"><div class="modal-head"><h2 id="modal-title"></h2><button class="icon-btn" data-action="close-modal" aria-label="Close dialog">Close</button></div><div class="modal-body" id="modal-body"></div></dialog>
+  <div id="toast" role="status" class="toast" hidden></div>
+  <noscript><p style="padding:24px">Enable JavaScript to play Quadruple Agent.</p></noscript>
+  <script>
+/* Add operation, agenda and role definitions here. IDs remain stable in saved configurations. */
+(function(root){
+  'use strict';
+  const operations = [
+    {id:'tip',name:'Anonymous Tip',kind:'random',targets:1,description:'Learn the apparent allegiance of one random active player.'},
+    {id:'confession',name:'Confession',kind:'choose',targets:1,description:'Choose another player and show them your actual allegiance.'},
+    {id:'intel',name:'Secret Intel',kind:'choose',targets:2,description:'Choose two other players. Learn whether at least one appears to be a Parasite.'},
+    {id:'encounter',name:'Unfortunate Encounter',kind:'random',targets:1,description:'Read the result together with a random other player. Learn whether either of you appears to be a Parasite.'},
+    {id:'evidence',name:'Incriminating Evidence',kind:'choose',targets:1,description:'Choose another player. Subtract one vote against them this round, or double their own vote.'},
+    {id:'defector',name:'Defector',kind:'decision',targets:0,description:'Choose whether to switch teams. A Force Defector cannot vote. A Parasite Defector loses if a current Parasite votes for them.'},
+    {id:'transfer',name:'Spy Transfer',kind:'choose',targets:1,description:'Secretly swap actual teams with another player. Neither team is disclosed.'},
+    {id:'agenda',name:'Hidden Agenda',kind:'random',targets:0,description:'Receive a new personal victory condition, or switch teams as a Sleeper Agent.'},
+    {id:'danish',name:'Danish Intelligence',kind:'choose',targets:2,description:'Choose two other players. Learn whether their apparent allegiances match.'}
+  ];
+  const agendas = [
+    {id:'sleeper',name:'Sleeper Agent',description:'Immediately switch teams. Your new team determines your victory.'},
+    {id:'scapegoat',name:'Operation Scapegoat',description:'Secure a personal win by being jailed in a vote. Your team no longer determines your victory.'},
+    {id:'infatuation',name:'Infatuation',description:'Win or lose with a random other player, regardless of allegiance.'},
+    {id:'grudge',name:'Grudge',description:'Secure a personal win when a random other player is jailed. Your team no longer determines your victory.'}
+  ];
+  const specials = [
+    {id:'suspicious',name:'Suspicious Agent',description:'While you are Force, information operations see you as a Parasite.'},
+    {id:'cover',name:'Deep Cover Agent',description:'While you are a Parasite, information operations see you as Force.'}
+  ];
+  const all = list => list.map(x=>x.id);
+  const defaults = {parasites:1,parity:true,discussionMinutes:3,operations:all(operations),agendas:all(agendas),specials:all(specials),manual:false,assignments:{},overrides:[]};
+  const presets = [
+    {id:'full',name:'Full',description:'Every operation & special role',config:defaults},
+    {id:'confident',name:'Confident',description:'Stable teams. Clean intelligence.',config:{...defaults,operations:all(operations).filter(id=>!['defector','transfer'].includes(id)),agendas:all(agendas).filter(id=>id!=='sleeper'),specials:[]}}
+  ];
+  const catalogue = {operations,agendas,specials,presets,defaults};
+  root.QACatalogue = catalogue;
+  if(typeof module!=='undefined' && module.exports)module.exports=catalogue;
+})(globalThis);
+
+</script>
+<script>
+/* Pure rules engine. No DOM or storage dependencies; state can be safely resumed behind a handover. */
+(function(root){
+  'use strict';
+  const C=root.QACatalogue || (typeof require==='function'?require('./catalogue.js'):null);
+  const clone=value=>JSON.parse(JSON.stringify(value));
+  const lookup=(list,id)=>list.find(item=>item.id===id);
+  const fail=message=>{throw new Error(message);};
+  function shuffle(list,rng=Math.random){const a=[...list];for(let i=a.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  const active=g=>g.players.filter(p=>!p.jailed);
+  const player=(g,id)=>g.players.find(p=>p.id===id);
+  const apparent=p=>p.special==='suspicious'&&p.team==='force'?'parasites':p.special==='cover'&&p.team==='parasites'?'force':p.team;
+  const other=team=>team==='force'?'parasites':'force';
+  function cleanConfig(raw={}){
+    const cfg={...clone(C.defaults),...clone(raw)};
+    for(const [key,list] of [['operations',C.operations],['agendas',C.agendas],['specials',C.specials]])cfg[key]=Array.isArray(cfg[key])?[...new Set(cfg[key].filter(id=>lookup(list,id)))]:list.map(x=>x.id);
+    cfg.parasites=Math.max(1,Math.min(8,Math.floor(Number(cfg.parasites)||1)));
+    cfg.parity=cfg.parity!==false;cfg.manual=cfg.manual===true;
+    cfg.discussionMinutes=Math.max(0,Math.min(30,Number(cfg.discussionMinutes)||0));
+    cfg.assignments=cfg.assignments&&typeof cfg.assignments==='object'&&!Array.isArray(cfg.assignments)?cfg.assignments:{};
+    cfg.overrides=Array.isArray(cfg.overrides)?cfg.overrides:[];
+    return cfg;
+  }
+  function roundOverrides(config,round,players){
+    if(!config.manual)return [];
+    const ids=new Set(players.filter(p=>!p.jailed).map(p=>p.id));
+    return config.overrides.filter(o=>Number(o.round)===round&&ids.has(o.player)&&lookup(C.operations,o.operation));
+  }
+  function validateRound(config,round,players){
+    const overrides=roundOverrides(config,round,players);const seen=new Set();
+    for(const o of overrides){if(seen.has(o.player))fail('Only one guaranteed operation per player in a round.');seen.add(o.player);}
+    const pool=config.operations.filter(id=>!overrides.some(o=>o.operation===id));
+    if(pool.length<players.filter(p=>!p.jailed).length-overrides.length)fail('There are not enough unique operations for every active player. Enable more operations or explicitly assign manual operations.');
+    if(config.operations.includes('agenda')&&!config.agendas.length&&overrides.filter(o=>o.operation==='agenda').length===0)fail('Enable at least one Hidden Agenda, or disable that operation.');
+    for(const o of overrides){
+      if(o.operation==='agenda'&&!config.agendas.length&&!lookup(C.agendas,o.result))fail('A guaranteed Hidden Agenda needs an enabled or explicitly assigned agenda.');
+      if(Array.isArray(o.targets)&&o.targets.includes(o.player))fail('An operation cannot target its own player.');
+    }
+    return overrides;
+  }
+  function createGame(roster,raw,rng=Math.random){
+    const config=cleanConfig(raw);
+    if(!Array.isArray(roster)||roster.length<3||roster.length>9)fail('Use 3–9 players.');
+    const names=roster.map(p=>String(p.name||'').trim());
+    if(names.some(n=>!n||n.length>30))fail('Give each player a name of 1–30 characters.');
+    if(new Set(names.map(n=>n.toLowerCase())).size!==names.length)fail('Each player needs a different name.');
+    if(new Set(roster.map(p=>p.id)).size!==roster.length)fail('Player IDs must be unique.');
+    if(config.parasites>=roster.length&&!config.manual)fail('Keep at least one starting Force player.');
+    const players=roster.map(p=>({id:p.id,name:p.name.trim(),team:null,special:null,jailed:false,defector:null,agenda:null,secured:[],disqualified:false}));
+    if(config.manual)for(const p of players){const a=config.assignments[p.id]||{};if(['force','parasites'].includes(a.team))p.team=a.team;if(a.special==='none'||lookup(C.specials,a.special))p.special=a.special;}
+    const fixedParasites=players.filter(p=>p.team==='parasites').length;
+    const unassigned=shuffle(players.filter(p=>!p.team),rng);
+    // Explicitly assigned teams can exceed the normal composition. Random slots fill the remaining requested count.
+    const needed=unassigned.length?Math.max(0,config.parasites-fixedParasites):0;
+    if(needed>unassigned.length)fail('Starting Parasite count conflicts with the manually assigned Force players. Lower the count or free a team assignment.');
+    unassigned.forEach((p,i)=>p.team=i<needed?'parasites':'force');
+    for(const id of config.specials){
+      if(players.some(p=>p.special===id))continue;
+      const eligible=players.filter(p=>p.special===null);
+      if(eligible.length&&rng()<.5)shuffle(eligible,rng)[0].special=id;
+    }
+    for(const p of players){if(p.special==='none')p.special=null;p.initialTeam=p.team;}
+    validateRound(config,1,players);
+    return {version:1,config,players,initialParasites:players.filter(p=>p.team==='parasites').map(p=>p.id),phase:'briefing',cursor:0,round:0,turns:[],effects:{},votes:{},voters:[],history:[],winner:null,endingReason:null};
+  }
+  function teamWinner(g){
+    const alive=active(g);const parasites=alive.filter(p=>p.team==='parasites').length;
+    if(!parasites)return {team:'force',reason:'Every active Parasite has been removed.'};
+    if(alive.length<=2)return {team:'parasites',reason:'Two or fewer players remain, with a Parasite still active.'};
+    if(g.config.parity&&parasites>=alive.length-parasites)return {team:'parasites',reason:'Parasites equal or outnumber the active Force.'};
+    return null;
+  }
+  function checkEnd(g){const end=teamWinner(g);if(end){g.winner=end.team;g.endingReason=end.reason;g.phase='ended';return true;}return false;}
+  function finishBriefing(g){if(g.phase!=='briefing')fail('Briefing is not active.');g.phase='round-ready';g.cursor=0;checkEnd(g);}
+  function startRound(g,rng=Math.random){
+    if(!['round-ready','results'].includes(g.phase))fail('Finish the current round first.');
+    if(checkEnd(g))return;
+    const alive=active(g);const round=g.round+1;const overrides=validateRound(g.config,round,alive);
+    const pool=shuffle(g.config.operations.filter(id=>!overrides.some(o=>o.operation===id)),rng);
+    const turns=alive.map(p=>{const override=overrides.find(o=>o.player===p.id);return {player:p.id,operation:override?override.operation:pool.pop(),override:override?clone(override):null,targets:null,result:null,done:false};});
+    g.round=round;g.phase='operations';g.cursor=0;g.turns=turns;g.effects={};g.votes={};g.voters=[];g.tally=null;
+  }
+  function resolveTargets(g,actor,count,requested=[],rng=Math.random){
+    const eligible=active(g).filter(p=>p.id!==actor).map(p=>p.id);
+    const chosen=[...new Set((Array.isArray(requested)?requested:[]).filter(id=>eligible.includes(id)))].slice(0,count);
+    chosen.push(...shuffle(eligible.filter(id=>!chosen.includes(id)),rng).slice(0,count-chosen.length));
+    if(chosen.length<count)fail('There are not enough active targets for this operation.');
+    return chosen;
+  }
+  function prepareTurn(g,index=g.cursor,rng=Math.random){
+    if(g.phase!=='operations'||index!==g.cursor)fail('This operation is not the current turn.');
+    const turn=g.turns[index];const op=lookup(C.operations,turn.operation);
+    if(turn.targets===null&&(op.kind==='random'||(turn.override&&turn.override.targets&&turn.override.targets.length)))turn.targets=resolveTargets(g,turn.player,op.targets,turn.override?.targets,rng);
+    return turn;
+  }
+  function switchTeam(p,team,asDefector=false){
+    if(p.team===team)return;
+    p.team=team;p.defector=asDefector?team:null;
+  }
+  function runOperation(g,{targets=[],choice=null}={},rng=Math.random){
+    const turn=prepareTurn(g,g.cursor,rng);if(turn.done)fail('This operation is already complete.');
+    const op=lookup(C.operations,turn.operation);const p=player(g,turn.player);
+    const forced=turn.override?.result||null;
+    const picked=turn.targets!==null?turn.targets:resolveTargets(g,p.id,op.targets,targets,rng);
+    if(op.kind==='choose'&&turn.targets===null&&(!Array.isArray(targets)||targets.length!==op.targets||new Set(targets).size!==targets.length||targets.some(id=>!active(g).some(t=>t.id===id&&id!==p.id))))fail(`Choose ${op.targets} different active player${op.targets===1?'':'s'}.`);
+    turn.targets=picked;const people=picked.map(id=>player(g,id));let result;
+    switch(op.id){
+      case 'tip':result={type:'intel',team:['force','parasites'].includes(forced)?forced:apparent(people[0]),targets:picked};break;
+      case 'confession':result={type:'confession',team:['force','parasites'].includes(forced)?forced:p.team,targets:picked};break;
+      case 'intel':case 'encounter':{
+        const group=op.id==='encounter'?[p,...people]:people;
+        result={type:'presence',parasite:['yes','no'].includes(forced)?forced==='yes':group.some(t=>apparent(t)==='parasites'),targets:picked};break;
+      }
+      case 'danish':result={type:'match',same:['same','different'].includes(forced)?forced==='same':apparent(people[0])===apparent(people[1]),targets:picked};break;
+      case 'evidence':{
+        const effect=['shield','double'].includes(forced)?forced:choice;
+        if(!['shield','double'].includes(effect))fail('Choose protection or a double vote.');
+        const entry=g.effects[picked[0]]||(g.effects[picked[0]]={shield:0,double:0});entry[effect]++;
+        result={type:'evidence',effect,targets:picked};break;
+      }
+      case 'defector':{
+        const decision=['switch','stay'].includes(forced)?forced:choice;
+        if(!['switch','stay'].includes(decision))fail('Choose whether to switch teams.');
+        if(decision==='switch')switchTeam(p,other(p.team),true);
+        result={type:'defector',switched:decision==='switch',team:p.team,defector:p.defector};break;
+      }
+      case 'transfer':{
+        const team=p.team;switchTeam(p,people[0].team);switchTeam(people[0],team);
+        result={type:'transfer',targets:picked};break;
+      }
+      case 'agenda':{
+        const agenda=lookup(C.agendas,forced)?forced:shuffle(g.config.agendas,rng)[0];
+        if(!agenda)fail('No Hidden Agenda is enabled.');
+        if(agenda==='sleeper'){switchTeam(p,other(p.team));p.agenda=null;result={type:'agenda',agenda,team:p.team};}
+        else{
+          const target=['infatuation','grudge'].includes(agenda)?resolveTargets(g,p.id,1,turn.override?.targets,rng)[0]:null;
+          p.agenda={id:agenda,target,round:g.round};result={type:'agenda',agenda,target};
+        }break;
+      }
+      default:fail('This operation has no rules handler.');
+    }
+    turn.result=result;turn.done=true;return result;
+  }
+  function finishTurn(g){
+    if(g.phase!=='operations'||!g.turns[g.cursor]?.done)fail('Complete the operation before passing the phone.');
+    g.cursor++;if(g.cursor>=g.turns.length){g.phase='discussion';g.cursor=0;checkEnd(g);}
+  }
+  function startVoting(g){
+    if(g.phase!=='discussion')fail('Voting follows discussion.');
+    g.voters=active(g).filter(p=>!(p.team==='force'&&p.defector==='force')).map(p=>p.id);g.cursor=0;g.phase='voting';
+    if(!g.voters.length)resolveVotes(g);
+  }
+  function vote(g,target){
+    if(g.phase!=='voting')fail('Voting is not active.');
+    const voter=g.voters[g.cursor];if(!voter)fail('There is no voter on this turn.');
+    if(voter===target||!active(g).some(p=>p.id===target))fail('Vote for a different active player.');
+    if(Object.hasOwn(g.votes,voter))fail('This player has already voted.');
+    g.votes[voter]=target;g.cursor++;if(g.cursor>=g.voters.length)resolveVotes(g);
+  }
+  function resolveVotes(g){
+    const alive=active(g);const totals=Object.fromEntries(alive.map(p=>[p.id,0]));const raw={...totals};
+    for(const [voter,target] of Object.entries(g.votes)){
+      const weight=g.effects[voter]?.double?2:1;totals[target]+=weight;raw[target]+=weight;
+      const targetPlayer=player(g,target);const voterPlayer=player(g,voter);
+      if(targetPlayer.team==='parasites'&&targetPlayer.defector==='parasites'&&voterPlayer.team==='parasites')targetPlayer.disqualified=true;
+    }
+    for(const p of alive)totals[p.id]=Math.max(0,totals[p.id]-(g.effects[p.id]?.shield||0));
+    const max=Math.max(0,...Object.values(totals));const leaders=max>0?alive.filter(p=>totals[p.id]===max):[];
+    const jailed=leaders.length===1?leaders[0]:null;
+    if(jailed){
+      jailed.jailed=true;
+      if(jailed.agenda?.id==='scapegoat')jailed.secured.push({id:'scapegoat',round:g.round});
+      for(const p of g.players)if(p.agenda?.id==='grudge'&&p.agenda.target===jailed.id)p.secured.push({id:'grudge',round:g.round});
+    }
+    // Public results contain totals and an actual jailing reveal, never voter identities or private operations.
+    g.tally={round:g.round,totals,raw,jailed:jailed?.id||null,reveal:jailed?.team||null,tie:leaders.length>1,noVotes:max===0};
+    g.history.push(clone(g.tally));g.phase='results';g.cursor=0;
+    const end=teamWinner(g);if(end){g.winner=end.team;g.endingReason=end.reason;}
+    return g.tally;
+  }
+  function outcomes(g){
+    if(!g.winner)fail('The game has not ended.');
+    const status=new Map();
+    for(const p of g.players){
+      if(p.disqualified)status.set(p.id,{win:false,reason:'A Parasite teammate voted for this Parasite Defector.'});
+      else if(p.secured.length)status.set(p.id,{win:true,reason:`Personal win secured: ${lookup(C.agendas,p.secured[0].id).name}.`});
+      else if(!p.agenda)status.set(p.id,{win:p.team===g.winner,reason:`${p.team==='force'?'Force':'Parasites'} allegiance at game end.`});
+      else if(['scapegoat','grudge'].includes(p.agenda.id))status.set(p.id,{win:false,reason:'Personal jailing condition was not fulfilled.'});
+    }
+    // Infatuation follows the target's personal result. A closed cycle has no independent result;
+    // its members use their own final team result. Documented in the field guide.
+    const pending=g.players.filter(p=>!status.has(p.id));
+    let progress=true;
+    while(progress){progress=false;for(const p of pending){if(status.has(p.id))continue;const target=status.get(p.agenda.target);if(target){status.set(p.id,{win:target.win,reason:`Shares ${player(g,p.agenda.target).name}'s result.`});progress=true;}}}
+    for(const p of pending)if(!status.has(p.id)){
+      const path=[];let current=p;
+      while(current&&!status.has(current.id)&&!path.includes(current.id)){path.push(current.id);current=player(g,current.agenda?.target);}
+      const cycleAt=current?path.indexOf(current.id):-1;
+      if(cycleAt>=0)for(const id of path.slice(cycleAt)){const member=player(g,id);status.set(id,{win:member.team===g.winner,reason:'Infatuation loop: final team result applies.'});}
+      for(let i=path.length-1;i>=0;i--)if(!status.has(path[i])){const member=player(g,path[i]);const target=status.get(member.agenda?.target);status.set(member.id,{win:target?target.win:member.team===g.winner,reason:target?`Shares ${player(g,member.agenda.target).name}'s result.`:'Final team result applies.'});}
+    }
+    return g.players.map(p=>({id:p.id,name:p.name,team:p.team,special:p.special,jailed:p.jailed,agenda:p.agenda,defector:p.defector,...status.get(p.id)}));
+  }
+  const api={clone,shuffle,cleanConfig,createGame,validateRound,active,player,apparent,teamWinner,checkEnd,finishBriefing,startRound,prepareTurn,resolveTargets,runOperation,finishTurn,startVoting,vote,resolveVotes,outcomes};
+  root.QAEngine=api;if(typeof module!=='undefined'&&module.exports)module.exports=api;
+})(globalThis);
+
+</script>
+<script>
+(function(){
+  'use strict';
+  const C=QACatalogue,E=QAEngine,$=id=>document.getElementById(id),main=$('main'),modal=$('modal');
+  const STORE='quadruple-agent.v1';
+  const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const teamName=team=>team==='force'?'Force':'Parasites';
+  const find=(list,id)=>list.find(item=>item.id===id);
+  const uid=()=>globalThis.crypto?.randomUUID?.()||`id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const defaultRoster=()=>[1,2,3,4].map(n=>({id:`p${n}`,name:`Player ${n}`}));
+  let saved={};try{saved=JSON.parse(localStorage.getItem(STORE)||'{}')||{};}catch{}
+  let roster=Array.isArray(saved.roster)&&saved.roster.length>=3&&saved.roster.length<=9?saved.roster:defaultRoster();
+  let config=E.cleanConfig(saved.config||C.defaults),customs=Array.isArray(saved.customs)?saved.customs:[];
+  let game=saved.game?.version===1&&Array.isArray(saved.game.players)?saved.game:null;
+  let view='setup',presetId=saved.presetId||'full',revealed=false,selected=[],choice=null,jointGate=false,error='',modalTab='config',modalMode='settings',toastTimeout;
+  let storageAvailable=true;
+  function persist(){try{localStorage.setItem(STORE,JSON.stringify({roster,config,customs,game,presetId}));}catch{storageAvailable=false;}}
+  function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>$('toast').hidden=true,3500);}
+  function markCustom(){presetId='custom';persist();}
+  function resetPrivate(){revealed=false;selected=[];choice=null;jointGate=false;error='';}
+  function button(label,action,cls='btn wide',attrs=''){return `<button class="${cls}" data-action="${action}" ${attrs}>${label}</button>`;}
+  function options(list,value,blank='Random'){return `<option value="">${blank}</option>`+list.map(x=>`<option value="${esc(x.id)}" ${x.id===value?'selected':''}>${esc(x.name)}</option>`).join('');}
+  function operationCount(){return config.operations.length;}
+  function errorBlock(){return error?`<div class="error" role="alert">${esc(error)}</div>`:'';}
+  function setup(){
+    const chosen=find(C.presets,presetId)||find(customs,presetId);
+    return `<div class="setup-grid"><section><div class="eyebrow">Shared-phone social deduction</div><h1 class="title">Quadruple<br><span>Agent.</span></h1><p class="intro">The Force is compromised. Pass the phone, gather intelligence, and decide who to trust.</p>
+      ${game&&game.phase!=='ended'?`<div class="notice row between"><span>Game in progress${game.round?` · Round ${game.round}`:''}</span>${button('Resume','resume','pill')}</div>`:''}
+      <div class="presets">${C.presets.map(p=>`<button class="preset ${presetId===p.id?'selected':''}" data-action="preset" data-id="${p.id}" aria-pressed="${presetId===p.id}"><b>${p.name}</b><span>${p.description}</span></button>`).join('')}</div>
+      <div class="row between" style="margin-bottom:26px"><span class="small muted">${chosen?esc(chosen.name):'Custom configuration'} · ${operationCount()} operations${config.manual?' · Manual mode':''}</span>${button('Presets','presets','pill')}</div>
+      <div class="panel-title"><h2>Your players</h2><span class="count">${roster.length} / 9</span></div>
+      <div class="stack">${roster.map((p,i)=>`<div class="player-row"><span class="player-number">${String(i+1).padStart(2,'0')}</span><input aria-label="Player ${i+1} name" autocomplete="off" maxlength="30" value="${esc(p.name)}" data-name="${esc(p.id)}"><button class="remove" aria-label="Remove ${esc(p.name)}" data-action="remove" data-id="${esc(p.id)}" ${roster.length<=3?'disabled':''}>×</button></div>`).join('')}</div>
+      <button class="add" data-action="add" ${roster.length>=9?'disabled':''}>+ Add player</button>
+      <div class="setting-row" style="margin-top:24px"><div>Starting Parasites${config.manual?'<div class="small muted">Manual teams count toward this total.</div>':''}</div><div class="stepper"><button data-action="less" aria-label="Fewer Parasites" ${config.parasites<=1?'disabled':''}>−</button><span>${config.parasites}</span><button data-action="more" aria-label="More Parasites" ${config.parasites>=roster.length-1?'disabled':''}>+</button></div></div>
+      ${errorBlock()}${!storageAvailable?'<div class="notice">Browser storage is unavailable. Export your configuration to keep it.</div>':''}
+      ${button('Begin briefing','start','btn wide launch')}<p class="launch-note">3–9 players · Pass & play · Private identities</p>
+      </section><aside class="setup-aside"><div class="panel"><div class="panel-title"><h3>Rules of engagement</h3><span class="unclassified">CLASSIFIED</span></div>${[['Operations','Everyone gets a unique private operation.'],['Discussion','Share your intel. Or sell a convincing lie.'],['Voting','Cast private votes. Reveal anonymous totals.']].map((r,i)=>`<div class="rule"><span class="number">0${i+1}</span><div><b>${r[0]}</b><p>${r[1]}</p></div></div>`).join('')}<div class="team-line"><span class="chip force">THE FORCE</span><span class="muted small">vs.</span><span class="chip parasites">PARASITES</span></div></div><div class="notice">Parasites recognise each other at the start. Team changes stay secret.</div><div class="notice">${config.parity?'Parasites win at equal numbers.':'Parasite parity victory is off.'} At two active players, the game always ends.</div></aside></div>`;
+  }
+  function phaseStrip(){const phase=game.phase;return `<div class="phase-strip"><span>ROUND ${game.round||'—'}</span>${[['operations','Operations'],['discussion','Discussion'],['voting','Voting']].map(([id,name])=>`<span class="${phase===id?'current':''}">${name}</span>`).join('')}</div>`;}
+  const lock=`<div class="seal" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="7" y="14" width="18" height="14" rx="3"/><path d="M11 14V9a5 5 0 0 1 10 0v5M16 20v3"/></svg></div>`;
+  function handover(names,caption,action='reveal'){return `<div class="handover">${lock}<div class="eyebrow">Private handover</div><p class="muted">${caption}</p><h1>${names.map(esc).join('<br><span class="muted" style="font-size:1.2rem">&</span><br>')}</h1><p class="muted small">${names.length>1?'Only these two players should look at the screen.':'Everyone else, look away.'}</p>${button(names.length>1?'We’re ready':'I’m '+esc(names[0]),action)}<p class="small muted" style="margin:16px 0 0">The next screen contains private information.</p></div>`;}
+  function briefing(){
+    const p=game.players[game.cursor];
+    if(!revealed)return handover([p.name],'Pass the phone to');
+    const special=find(C.specials,p.special);
+    const teammates=game.initialParasites.filter(id=>id!==p.id).map(id=>E.player(game,id).name);
+    return `<div class="eyebrow">Initial briefing · ${game.cursor+1} / ${game.players.length}</div><h1>Your allegiance</h1><div class="secret ${p.team}"><div class="micro muted">Eyes only / ${esc(p.name)}</div><div class="team-name ${p.team==='parasites'?'red':'blue'}">${teamName(p.team)}</div><p>${p.team==='force'?'Find and jail the Parasites. Your teammates are unknown.':'Stay hidden and take control of the Force.'}</p>${p.team==='parasites'?`<hr class="divider"><h3>Your starting ${teammates.length===1?'teammate':'teammates'}</h3><p>${teammates.length?teammates.map(esc).join(', '):'You are the only starting Parasite.'}</p><p class="small muted">This is your only teammate briefing. Later team changes stay secret.</p>`:''}</div>${special?`<div class="result-detail"><h3>${special.name}</h3><p class="muted">${special.description}</p></div>`:'<p class="muted small">No special role.</p>'}${button('Conceal & pass','brief-next')}<p class="small muted center" style="margin:14px 0">Remember your allegiance before continuing.</p>`;
+  }
+  function roundReady(){return `<div class="eyebrow">Round ${game.round+1} / Ready</div><h1>New round.<br>Fresh intelligence.</h1><p class="muted">Everyone gets one operation. Complete it privately, then conceal the screen and pass the phone.</p><div class="public-roster">${game.players.map(p=>`<span class="${p.jailed?'jailed':''}">${esc(p.name)}${p.jailed?' · jailed':''}</span>`).join('')}</div>${game.config.manual?`<div class="notice">Manual mode is active. Round overrides replace unavailable targets automatically.</div>${button('Edit round overrides','game-overrides','btn secondary wide')}`:''}${errorBlock()}${button('Start operations','round-start','btn wide launch')}`;}
+  function targetButtons(ids,limit){return `<div class="target-list">${ids.map(id=>{const p=E.player(game,id),on=selected.includes(id);return `<button class="target ${on?'selected':''}" data-action="target" data-id="${esc(id)}" data-limit="${limit}" aria-pressed="${on}"><span class="avatar">${String(game.players.indexOf(p)+1).padStart(2,'0')}</span><span class="target-name">${esc(p.name)}</span><span class="selection" aria-hidden="true"></span></button>`;}).join('')}</div>`;}
+  function operations(){
+    const turn=game.turns[game.cursor],p=E.player(game,turn.player),op=find(C.operations,turn.operation);
+    const together=(turn.done&&['confession','encounter'].includes(op.id))||jointGate;
+    if(!revealed){
+      const partners=together?[p.name,...(turn.targets||[]).map(id=>E.player(game,id).name)]:[p.name];
+      return handover(partners,together?'Read the next screen together':'Pass the phone to');
+    }
+    if(turn.done)return operationResult(turn);
+    const forced=turn.override?.result;
+    const fixed=turn.targets!==null&&op.targets>0;
+    let body=`<div class="eyebrow">Operation ${game.cursor+1} / ${game.turns.length} · ${esc(p.name)}</div><h1>${op.name}</h1><p class="muted">${op.description}</p>`;
+    if(op.kind==='choose'&&op.targets){
+      if(fixed)body+=`<div class="notice">Your ${op.targets===1?'target is':'targets are'} ${turn.targets.map(id=>esc(E.player(game,id).name)).join(' and ')}.</div>`;
+      else body+=`<p class="small accent">Choose ${op.targets===1?'one player':'two players'}${op.targets===2?` · ${selected.length}/2 selected`:''}</p>${targetButtons(E.active(game).filter(t=>t.id!==p.id).map(t=>t.id),op.targets)}`;
+    }
+    if(op.id==='evidence'){
+      const effect=['shield','double'].includes(forced)?forced:choice;
+      body+=`<div class="presets"><button class="preset ${effect==='shield'?'selected':''}" data-action="choice" data-choice="shield" ${forced?'disabled':''}><b>Shield</b><span>Subtract 1 vote against them</span></button><button class="preset ${effect==='double'?'selected':''}" data-action="choice" data-choice="double" ${forced?'disabled':''}><b>Double vote</b><span>Their own vote counts as 2</span></button></div>`;
+    }
+    if(op.id==='defector'){
+      const decision=['switch','stay'].includes(forced)?forced:choice;
+      body+=`<div class="notice">Force Defectors cannot vote while Force. Parasite Defectors permanently lose if any current Parasite votes for them. Other players will not be told.</div><div class="presets"><button class="preset ${decision==='stay'?'selected':''}" data-action="choice" data-choice="stay" ${forced?'disabled':''}><b>Stay</b><span>Keep your current allegiance</span></button><button class="preset ${decision==='switch'?'selected':''}" data-action="choice" data-choice="switch" ${forced?'disabled':''}><b>Defect</b><span>Switch to the other team</span></button></div>`;
+    }
+    if(op.id==='encounter')body+=`<div class="notice">Your partner: <strong>${esc(E.player(game,turn.targets[0]).name)}</strong>. Both of you must read the result together.</div>`;
+    const ready=(op.kind!=='choose'||fixed||selected.length===op.targets)&&(!['evidence','defector'].includes(op.id)||choice||forced);
+    body+=errorBlock()+button(op.id==='encounter'?'Invite partner & conceal':op.id==='confession'?'Conceal for confession':'Complete operation','operate','btn wide',ready?'':'disabled');return body;
+  }
+  function operationResult(turn){
+    const r=turn.result,p=E.player(game,turn.player),op=find(C.operations,turn.operation),names=(r.targets||[]).map(id=>E.player(game,id).name);let headline='',detail='';
+    switch(r.type){
+      case 'intel':headline=teamName(r.team);detail=`${esc(names[0])} appears to belong to the ${r.team==='force'?'Force':'Parasites'}.`;break;
+      case 'confession':headline=`${esc(p.name)} is ${r.team==='force'?'Force':'a Parasite'}.`;detail=`${esc(names[0])}, this is ${esc(p.name)}’s actual allegiance.`;break;
+      case 'presence':headline=r.parasite?'A Parasite is present.':'No Parasite detected.';detail=`${turn.operation==='encounter'?[p.name,...names].map(esc).join(' and '):names.map(esc).join(' and ')}: ${r.parasite?'at least one appears to be a Parasite.':'both appear to be Force.'}`;break;
+      case 'match':headline=r.same?'Same team.':'Different teams.';detail=`${names.map(esc).join(' and ')} appear to work for ${r.same?'the same team':'different teams'}.`;break;
+      case 'evidence':headline=r.effect==='shield'?'One vote of protection.':'A vote with double effect.';detail=r.effect==='shield'?`One vote will be subtracted from ${esc(names[0])}’s total this round.`:`${esc(names[0])}’s own vote counts as two this round.`;break;
+      case 'defector':headline=r.switched?`You are now ${r.team==='force'?'Force':'a Parasite'}.`:'Allegiance unchanged.';detail=r.switched?(r.team==='force'?'You are a Force Defector. You cannot vote while you remain Force.':'You are a Parasite Defector. If any current Parasite votes for you, you permanently lose.'):'You chose to stay on your current team.';break;
+      case 'transfer':headline='Transfer complete.';detail=`Your team was swapped with ${esc(names[0])}’s. Neither allegiance is disclosed. If both teams matched, no allegiance changed.`;break;
+      case 'agenda':{
+        const agenda=find(C.agendas,r.agenda);headline=agenda.name;
+        if(r.agenda==='sleeper')detail=`You immediately switched teams. You are now <strong>${teamName(r.team)}</strong>, and your new team determines your victory.`;
+        else if(r.agenda==='scapegoat')detail='Your new goal: get jailed in a vote. This secures your personal win immediately, regardless of your team.';
+        else if(r.agenda==='grudge')detail=`Your target is <strong>${esc(E.player(game,r.target).name)}</strong>. Secure your personal win when they are jailed, regardless of your team.`;
+        else detail=`You share <strong>${esc(E.player(game,r.target).name)}</strong>’s personal victory or loss, regardless of either player’s allegiance.`;
+        if(p.secured.length)detail+='<br>Your earlier secured personal win is retained.';
+        break;
+      }
+    }
+    return `<div class="eyebrow">${op.name} / Eyes only</div><h1>Intelligence received.</h1><div class="secret"><div class="micro muted">${esc(p.name)}${['confession','encounter'].includes(turn.operation)?' & '+names.map(esc).join(', '):''}</div><div class="big-result">${headline}</div><p>${detail}</p></div>${['intel','presence','match'].includes(r.type)?'<p class="small muted">Special roles can disguise allegiance. Information reflects the moment this operation was completed.</p>':''}${r.type==='agenda'&&r.agenda!=='sleeper'?'<p class="small muted">This replaces your personal victory condition. Your allegiance still determines team counts and intel. A later Hidden Agenda replaces an unfinished one.</p>':''}${button('Conceal & pass','op-next')}`;
+  }
+  function discussion(){
+    return `<div class="eyebrow">Discussion / Everyone may look</div><h1>Compare stories.<br>Question everything.</h1><p class="muted">Share what you learned, or tell a convincing lie. Decide who should be jailed.</p><div class="panel center"><div class="micro muted">Discussion timer · optional</div><div class="timer" id="timer">${timerText()}</div><div class="row" style="justify-content:center">${button(game.timer?.running?'Pause':'Start','timer-toggle','pill')}${button('Reset','timer-reset','pill')}</div></div><div class="public-roster">${E.active(game).map(p=>`<span>${esc(p.name)}</span>`).join('')}</div><p class="small muted">Votes are private. Ties jail nobody. No self-votes. A jailed player’s actual allegiance is revealed.</p>${button('Begin private voting','voting-start','btn wide launch')}`;
+  }
+  function voting(){
+    const p=E.player(game,game.voters[game.cursor]);
+    if(!revealed)return handover([p.name],'Pass the phone to vote');
+    return `<div class="eyebrow">Private vote ${game.cursor+1} / ${game.voters.length}</div><h1>Who do you<br>want to jail?</h1><p class="muted">${esc(p.name)}, choose another active player. Your vote will be revealed only as an anonymous total.</p>${targetButtons(E.active(game).filter(t=>t.id!==p.id).map(t=>t.id),1)}${errorBlock()}${button('Lock vote & conceal','cast-vote','btn wide',selected.length===1?'':'disabled')}`;
+  }
+  function results(){
+    const tally=game.tally,jailed=tally.jailed?E.player(game,tally.jailed):null;
+    return `<div class="eyebrow">Round ${game.round} / Anonymous results</div><h1>${jailed?esc(jailed.name)+' is jailed.':tally.tie?'A tie. Nobody jailed.':'Nobody is jailed.'}</h1>${jailed?`<div class="notice"><span class="chip ${tally.reveal}">${teamName(tally.reveal).toUpperCase()}</span> <span style="margin-left:8px">Actual allegiance revealed</span></div>`:'<p class="muted">'+(tally.tie?'The highest total was shared.':'No player received a positive final total.')+'</p>'}<div class="panel"><div class="panel-title"><h3>Final vote totals</h3><span class="count">ROUND ${game.round}</span></div>${Object.entries(tally.totals).sort((a,b)=>b[1]-a[1]).map(([id,total])=>`<div class="results-row"><span class="name">${esc(E.player(game,id).name)}${id===tally.jailed?' <span class="red small">JAILED</span>':''}</span><span class="vote-total">${total}</span></div>`).join('')}<p class="small muted" style="margin:18px 0 0">Double votes and protection are included. Voter identities remain concealed.</p></div>${game.winner?`<div class="notice">The game has ended. ${esc(game.endingReason)}</div>${button('Reveal final outcomes','final-results','btn wide launch')}`:`<p class="muted small" style="margin:20px 0">${E.active(game).length} players remain. Any personal wins stay secret until the game ends.</p>${game.config.manual?button('Edit round overrides','game-overrides','btn secondary wide'):''}${errorBlock()}${button('Next round','round-start','btn wide launch')}`}`;
+  }
+  function ended(){const outcomes=E.outcomes(game);return `<div class="eyebrow">Case closed / Everyone may look</div><h1 class="${game.winner==='force'?'blue':'red'}">${teamName(game.winner)} win.</h1><p class="muted">${esc(game.endingReason)}</p><div class="notice">Personal agendas can give players a different result from their team.</div>${outcomes.map(p=>`<div class="result-detail"><div class="row between"><h3 style="margin:0">${esc(p.name)}</h3><span class="chip ${p.win?'force':'parasites'}">${p.win?'WIN':'LOSS'}</span></div><p class="small muted" style="margin:8px 0">${teamName(p.team)}${p.jailed?' · Jailed':''}${p.special?' · '+find(C.specials,p.special).name:''}${p.agenda?' · '+find(C.agendas,p.agenda.id).name:''}${p.defector?' · '+teamName(p.defector)+' Defector':''}</p><p class="small">${esc(p.reason)}</p></div>`).join('')}${button('Play again','play-again','btn wide launch')}`;}
+  function render(){
+    $('settings-button').textContent=view==='setup'?'Settings':'Controls';
+    if(view==='setup'){main.innerHTML=setup();return;}
+    const fn={briefing, 'round-ready':roundReady,operations,discussion,voting,results,ended}[game.phase];
+    main.innerHTML=`<section class="game-view">${['briefing','ended'].includes(game.phase)?'':phaseStrip()}${fn?fn():'<p>Unable to resume this game.</p>'}</section>`;
+  }
+  function openModal(title,html,mode){modalMode=mode;$('modal-title').textContent=title;$('modal-body').innerHTML=html;if(!modal.open)modal.showModal();}
+  function closeModal(){modal.close();error='';}
+  function settings(tab='config'){
+    modalTab=tab;
+    if(view==='playing'){resetPrivate();render();openModal('Game controls',`<p class="muted">The current game is saved on this browser. Returning to setup keeps it available to resume.</p>${game.config.manual&&['round-ready','results'].includes(game.phase)&&!game.winner?button('Edit upcoming round overrides','game-overrides','btn secondary wide'):''}${button('Return to setup','leave','btn secondary wide launch')}${button('Conceal screen','conceal','btn wide launch')}`,'controls');return;}
+    const tabs=`<div class="tabbar" role="tablist">${[['config','Rules'],['manual','Manual mode'],['presets','Saved presets']].map(([id,label])=>`<button role="tab" aria-selected="${tab===id}" class="${tab===id?'active':''}" data-action="settings-tab" data-tab="${id}">${label}</button>`).join('')}</div>`;
+    let body=tab==='config'?configForm():tab==='manual'?manualForm(config,roster,false):presetsForm();
+    openModal('Game settings',tabs+body+errorBlock()+(tab==='presets'?'':`<div class="modal-foot">${button('Done','settings-done')}</div>`),'settings');
+  }
+  function checklist(list,key){return list.map(item=>`<div class="check-row"><input type="checkbox" id="toggle-${item.id}" data-list="${key}" data-id="${item.id}" ${config[key].includes(item.id)?'checked':''}><label for="toggle-${item.id}">${item.name}<p>${item.description}</p></label></div>`).join('');}
+  function configForm(){return `<div class="check-row"><input type="checkbox" id="parity" data-config="parity" ${config.parity?'checked':''}><label for="parity">Parasite parity victory<p>End when active Parasites equal or outnumber the Force.</p></label></div><div class="notice">Always ends at two active players. Any remaining Parasite gives the Parasites the team victory. No remaining Parasites gives the Force victory.</div><label>Discussion timer (minutes, 0 to disable)<input type="number" min="0" max="30" data-config="discussionMinutes" value="${config.discussionMinutes}"></label><hr class="divider"><h3>Operations</h3><p class="small muted">One unique operation per active player. Enable enough for your group.</p>${checklist(C.operations,'operations')}<hr class="divider"><h3>Hidden Agenda outcomes</h3><p class="small muted">A new agenda replaces that player’s unfinished condition. Secured personal wins are retained.</p>${checklist(C.agendas,'agendas')}<hr class="divider"><h3>Special roles</h3><p class="small muted">Each enabled role has a 50% chance of appearing, with at most one of each. Explicit manual assignments can exceed this limit.</p>${checklist(C.specials,'specials')}`;}
+  function resultOptions(operation){
+    if(['tip','confession'].includes(operation))return [{id:'force',name:'Force'},{id:'parasites',name:'Parasites'}];
+    if(['intel','encounter'].includes(operation))return [{id:'yes',name:'Parasite present'},{id:'no',name:'No Parasite detected'}];
+    if(operation==='danish')return [{id:'same',name:'Same team'},{id:'different',name:'Different teams'}];
+    if(operation==='agenda')return C.agendas;
+    if(operation==='evidence')return [{id:'shield',name:'Subtract one vote'},{id:'double',name:'Double their own vote'}];
+    if(operation==='defector')return [{id:'stay',name:'Stay'},{id:'switch',name:'Switch teams'}];
+    return [];
+  }
+  function manualForm(cfg,people,duringGame){
+    let body=duringGame?`<p class="muted">Upcoming round: <strong>${game.round+1}</strong>. Only active players get operations. Jailed targets are replaced with random eligible players.</p>`:`<div class="check-row"><input type="checkbox" id="manual-toggle" data-config="manual" ${cfg.manual?'checked':''}><label for="manual-toggle">Enable manual mode<p>Override any part of setup or a round. Everything else stays random.</p></label></div>`;
+    if(!cfg.manual)return body+'<div class="notice">Enable manual mode to assign teams, special roles, operations and results.</div>';
+    body+=`<div class="notice">These assignments are private. Set them before the group looks at the screen. Explicit assignments can use disabled content or exceed normal limits.</div>`;
+    if(!duringGame){body+='<h3>Starting assignments</h3>';for(const p of people){const a=cfg.assignments[p.id]||{};body+=`<div class="override"><h3>${esc(p.name)}</h3><div class="field-grid"><label>Allegiance<select data-assignment="team" data-id="${esc(p.id)}">${options([{id:'force',name:'Force'},{id:'parasites',name:'Parasites'}],a.team)}</select></label><label>Special role<select data-assignment="special" data-id="${esc(p.id)}">${options([{id:'none',name:'No special role'},...C.specials],a.special)}</select></label></div></div>`;}}
+    body+=`<hr class="divider"><div class="panel-title"><h3>Guaranteed operations</h3><span class="count">${cfg.overrides.length}</span></div><p class="small muted">Choose a round and player. Random targets and results stay available. If the player is jailed, the whole assignment is skipped.</p>`;
+    if(!cfg.overrides.length)body+='<div class="empty">No overrides. Operations stay random.</div>';
+    cfg.overrides.forEach((o,index)=>{
+      const op=find(C.operations,o.operation);const targetCount=op?.id==='agenda'?(['grudge','infatuation'].includes(o.result)?1:0):op?.targets||0;
+      const candidates=people.filter(p=>p.id!==o.player).map(p=>({id:p.id,name:p.name+(p.jailed?' (jailed → random replacement)':'')}));
+      const choices=resultOptions(o.operation);
+      body+=`<div class="override"><button class="remove" data-action="override-remove" data-index="${index}" aria-label="Remove override ${index+1}">×</button><h3>Override ${index+1}</h3><div class="field-grid"><label>Round<input type="number" min="${duringGame?game.round+1:1}" max="999" data-override="round" data-index="${index}" value="${Number(o.round)||1}"></label><label>Player<select data-override="player" data-index="${index}">${people.map(p=>`<option value="${esc(p.id)}" ${o.player===p.id?'selected':''}>${esc(p.name)}${p.jailed?' (jailed)':''}</option>`).join('')}</select></label><label class="full">Operation<select data-override="operation" data-index="${index}">${C.operations.map(p=>`<option value="${p.id}" ${p.id===o.operation?'selected':''}>${p.name}</option>`).join('')}</select></label>${choices.length?`<label class="full">Guaranteed ${['evidence','defector'].includes(o.operation)?'decision':'result'}<select data-override="result" data-index="${index}">${options(choices,o.result,['evidence','defector'].includes(o.operation)?'Player chooses':'Natural / random result')}</select></label>`:''}${Array.from({length:targetCount},(_,t)=>`<label class="${targetCount===1?'full':''}">Target ${targetCount===1?'':t+1}<select data-override="target${t}" data-index="${index}">${options(candidates,o.targets?.[t],'Random active player')}</select></label>`).join('')}</div></div>`;
+    });
+    body+=button('+ Add operation override','override-add','btn secondary wide');return body;
+  }
+  let overridesDraft=null;
+  function gameOverrides(){
+    if(!game.config.manual||!['round-ready','results'].includes(game.phase)||game.winner)throw new Error('Round overrides are only editable between rounds.');
+    if(!overridesDraft)overridesDraft=E.clone(game.config);
+    openModal('Round overrides',manualForm(overridesDraft,game.players,true)+errorBlock()+`<div class="modal-foot">${button('Cancel','overrides-cancel','btn secondary')}${button('Save overrides','overrides-save')}</div>`,'game-overrides');
+  }
+  function presetsForm(){return `<h3>Default presets</h3>${C.presets.map(p=>`<div class="setting-row"><div><strong>${p.name}</strong><p class="small muted" style="margin:4px 0 0">${p.id==='full'?'All operations, agendas and special roles.':'No special roles, Defector, Sleeper Agent or Spy Transfer.'}</p></div>${button('Load','preset','pill',`data-id="${p.id}"`)}</div>`).join('')}<hr class="divider"><h3>Your saved configurations</h3><p class="small muted">Includes players, rules, starting assignments and round overrides. Saved on this browser.</p>${customs.length?customs.map(p=>`<div class="setting-row"><strong>${esc(p.name)}</strong><div class="row">${button('Load','load-custom','pill',`data-id="${esc(p.id)}"`)}${button('Delete','delete-custom','pill',`data-id="${esc(p.id)}"`)}</div></div>`).join(''):'<div class="empty">No saved configurations yet.</div>'}<label style="margin-top:20px">Configuration name<input id="preset-name" placeholder="Friday night" maxlength="40" autocomplete="off"></label>${button('Save current configuration','save-custom','btn wide launch')}<hr class="divider"><h3>Take your config with you</h3><p class="small muted">Export a file to back up your settings or import them on another device.</p><div class="sides">${button('Export config','export','btn secondary')}${button('Import config','import','btn secondary')}</div><input type="file" id="config-file" accept="application/json,.json" hidden>`;}
+  function help(){
+    const intro=`<h3>One phone, private turns</h3><p class="muted">3–9 players. Brief everyone privately. Each round: Operations, Discussion, then Voting. Conceal before passing. Players may lie about their information.</p><h3>Teams & voting</h3><p class="muted">Starting Parasites recognise each other once. Team changes stay secret. Force Defectors cannot vote while Force. No self-votes. Highest final total is jailed and reveals actual allegiance; ties jail nobody. A jailed player stops taking turns.</p><p class="muted">The Force wins when no active Parasites remain. Parasites win at equal or greater numbers if parity victory is enabled. At two active players the game always ends: any Parasite means a Parasite victory. Team victory is checked after setup, after all operations, and after voting.</p>`;
+    openModal('Field guide',intro+`<h3 style="margin-top:28px">Operations</h3>${C.operations.map(o=>`<div class="help-entry"><h3>${o.name}</h3><p>${o.description}</p></div>`).join('')}<hr class="divider"><h3>Personal agendas</h3>${C.agendas.map(a=>`<div class="help-entry"><h3>${a.name}</h3><p>${a.description}</p></div>`).join('')}<div class="notice">A later Hidden Agenda replaces an unfinished agenda. A secured Scapegoat or Grudge win is retained. A Parasite Defector’s teammate-vote loss overrides every personal win. Secured personal wins stay private until the final reveal.</div><p class="small muted">Infatuation follows the target’s personal outcome, including their own agenda. If Infatuation forms a closed loop, each player in the loop uses their final team outcome; anyone following them shares that outcome.</p><hr class="divider"><h3>Special roles</h3>${C.specials.map(s=>`<div class="help-entry"><h3>${s.name}</h3><p>${s.description}</p></div>`).join('')}<p class="small muted" style="margin-top:16px">Confession reveals actual allegiance. Other information uses apparent allegiance. A special role stays with its player after a team change. Defector restrictions clear if an operation later changes that player’s team.</p><h3>Manual mode</h3><p class="small muted">Explicit assignments may exceed normal limits; random assignments never create a second copy of a manually assigned special role. Explicitly duplicated operations are allowed, but randomly dealt operations stay unique. Manual result overrides can deliberately alter reported intel. Protection stacks by subtracting one per use, with a minimum total of zero. A double vote always counts as two, even with repeated bonuses.</p><p class="small muted">At least two other active players are required for two-target intel. Jailed operation owners are skipped. Unavailable or duplicated targets are replaced with eligible active players. Unfilled targets are chosen randomly. Guaranteed results are preserved.</p><div class="modal-foot">${button('Understood','close-modal')}</div>`,'help');
+  }
+  function applyPreset(id){const p=find(C.presets,id);if(!p)return;config=E.cleanConfig(p.config);config.parasites=Math.min(config.parasites,roster.length-1);presetId=id;error='';persist();render();if(modal.open&&modalMode==='settings')settings(modalTab);toast(p.name+' preset loaded');}
+  function newGame(){game=E.createGame(roster,config);view='playing';resetPrivate();persist();render();window.scrollTo(0,0);}
+  function setTimer(){game.timer={remaining:game.config.discussionMinutes*60,running:false,deadline:null};}
+  function remainingTime(){return game?.timer?.running?Math.max(0,Math.ceil((game.timer.deadline-Date.now())/1000)):game?.timer?.remaining||0;}
+  function timerText(){const seconds=remainingTime();return `${String(Math.floor(seconds/60)).padStart(2,'0')}:${String(seconds%60).padStart(2,'0')}`;}
+  function privateAdvance(){resetPrivate();persist();render();window.scrollTo(0,0);}
+  function runAction(action,b){
+    switch(action){
+      case 'add':if(roster.length<9){let n=1;while(roster.some(p=>p.name===`Player ${n}`))n++;roster.push({id:uid(),name:`Player ${n}`});persist();render();}break;
+      case 'remove':if(roster.length>3){roster=roster.filter(p=>p.id!==b.dataset.id);config.parasites=Math.min(config.parasites,roster.length-1);delete config.assignments[b.dataset.id];config.overrides=config.overrides.filter(o=>o.player!==b.dataset.id);persist();render();}break;
+      case 'less':config.parasites=Math.max(1,config.parasites-1);markCustom();render();break;
+      case 'more':config.parasites=Math.min(roster.length-1,config.parasites+1);markCustom();render();break;
+      case 'preset':applyPreset(b.dataset.id);break;
+      case 'settings':settings();break;
+      case 'settings-tab':error='';settings(b.dataset.tab);break;
+      case 'presets':settings('presets');break;
+      case 'help':if(view==='playing'){revealed=false;render();}help();break;
+      case 'close-modal':closeModal();break;
+      case 'settings-done':closeModal();persist();render();break;
+      case 'start':
+        E.createGame(roster,config);
+        if(game&&game.phase!=='ended')openModal('Replace the current game?',`<p class="muted">A game is already in progress. Starting a new briefing replaces it.</p><div class="modal-foot">${button('Keep current game','close-modal','btn secondary')}${button('New game','replace-game')}</div>`,'replace');
+        else newGame();break;
+      case 'replace-game':closeModal();newGame();break;
+      case 'resume':view='playing';resetPrivate();render();break;
+      case 'leave':closeModal();view='setup';resetPrivate();persist();render();break;
+      case 'conceal':closeModal();revealed=false;render();break;
+      case 'reveal':
+        if(game.phase==='operations'){
+          const turn=E.prepareTurn(game);if(jointGate&&turn.operation==='encounter'&&!turn.done){E.runOperation(game);persist();}
+        }
+        revealed=true;render();break;
+      case 'brief-next':game.cursor++;if(game.cursor>=game.players.length)E.finishBriefing(game);privateAdvance();break;
+      case 'round-start':E.startRound(game);privateAdvance();break;
+      case 'target':{
+        const id=b.dataset.id,limit=Number(b.dataset.limit);selected=selected.includes(id)?selected.filter(t=>t!==id):limit===1?[id]:selected.length<limit?[...selected,id]:[...selected.slice(1),id];render();break;
+      }
+      case 'choice':choice=b.dataset.choice;render();break;
+      case 'operate':{
+        const turn=E.prepareTurn(game);
+        if(turn.operation==='encounter'){jointGate=true;revealed=false;render();break;}
+        E.runOperation(game,{targets:selected,choice});persist();
+        if(turn.operation==='confession'){jointGate=true;revealed=false;}
+        render();window.scrollTo(0,0);break;
+      }
+      case 'op-next':E.finishTurn(game);if(game.phase==='discussion')setTimer();privateAdvance();break;
+      case 'timer-toggle':if(!game.timer)setTimer();if(game.timer.running){game.timer.remaining=remainingTime();game.timer.running=false;}else{if(!remainingTime())game.timer.remaining=game.config.discussionMinutes*60;game.timer.deadline=Date.now()+game.timer.remaining*1000;game.timer.running=true;}persist();render();break;
+      case 'timer-reset':setTimer();persist();render();break;
+      case 'voting-start':E.startVoting(game);privateAdvance();break;
+      case 'cast-vote':if(selected.length!==1)throw new Error('Choose a player first.');E.vote(game,selected[0]);privateAdvance();break;
+      case 'final-results':game.phase='ended';privateAdvance();break;
+      case 'play-again':game=null;view='setup';privateAdvance();break;
+      case 'game-overrides':resetPrivate();overridesDraft=null;gameOverrides();break;
+      case 'overrides-cancel':overridesDraft=null;closeModal();break;
+      case 'overrides-save':E.validateRound(overridesDraft,game.round+1,E.active(game));game.config.overrides=E.clone(overridesDraft.overrides);overridesDraft=null;closeModal();persist();render();toast('Round overrides saved');break;
+      case 'override-add':{
+        const cfg=modalMode==='game-overrides'?overridesDraft:config;const people=modalMode==='game-overrides'?E.active(game):roster;
+        cfg.overrides.push({round:modalMode==='game-overrides'?game.round+1:1,player:people[0].id,operation:'tip',result:'',targets:[]});
+        if(modalMode==='game-overrides')gameOverrides();else{markCustom();settings('manual');}break;
+      }
+      case 'override-remove':{const cfg=modalMode==='game-overrides'?overridesDraft:config;cfg.overrides.splice(Number(b.dataset.index),1);if(modalMode==='game-overrides')gameOverrides();else{markCustom();settings('manual');}break;}
+      case 'save-custom':{
+        const name=$('preset-name').value.trim();if(!name)throw new Error('Name your configuration first.');
+        const existing=customs.find(p=>p.name.toLowerCase()===name.toLowerCase());
+        if(existing){openModal('Update saved configuration?',`<p>Replace the saved settings for <strong>${esc(name)}</strong> with your current configuration?</p><div class="modal-foot">${button('Cancel','presets','btn secondary')}${button('Update','overwrite-custom','btn',`data-id="${esc(existing.id)}"`)}</div>`,'overwrite');}
+        else{const item={id:uid(),name,config:E.clone(config),roster:E.clone(roster)};customs.push(item);presetId=item.id;persist();settings('presets');render();toast('Configuration saved');}break;
+      }
+      case 'overwrite-custom':{const item=find(customs,b.dataset.id);item.config=E.clone(config);item.roster=E.clone(roster);presetId=item.id;persist();settings('presets');render();toast('Configuration updated');break;}
+      case 'load-custom':{
+        const p=find(customs,b.dataset.id);config=E.cleanConfig(p.config);if(p.roster)roster=E.clone(p.roster);presetId=p.id;persist();settings('presets');render();toast(p.name+' loaded');break;
+      }
+      case 'delete-custom':openModal('Delete saved configuration?',`<p>Delete <strong>${esc(find(customs,b.dataset.id).name)}</strong> from this browser?</p><div class="modal-foot">${button('Cancel','presets','btn secondary')}${button('Delete','confirm-delete','btn danger',`data-id="${esc(b.dataset.id)}"`)}</div>`,'delete');break;
+      case 'confirm-delete':customs=customs.filter(p=>p.id!==b.dataset.id);if(presetId===b.dataset.id)presetId='custom';persist();settings('presets');render();break;
+      case 'export':{
+        const body={format:'quadruple-agent-config',version:1,name:find(customs,presetId)?.name||find(C.presets,presetId)?.name||'Custom',roster,config};
+        const url=URL.createObjectURL(new Blob([JSON.stringify(body,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='quadruple-agent-config.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Configuration exported');break;
+      }
+      case 'import':$('config-file').click();break;
+    }
+  }
+  document.addEventListener('click',event=>{
+    const b=event.target.closest('[data-action]');if(!b||b.disabled)return;
+    error='';try{runAction(b.dataset.action,b);}catch(err){error=err.message||'Something went wrong.';if(modal.open){if(modalMode==='game-overrides')gameOverrides();else if(modalMode==='settings')settings(modalTab);else toast(error);}else render();}
+  });
+  document.addEventListener('input',event=>{
+    const t=event.target;
+    if(t.dataset.name){const p=roster.find(p=>p.id===t.dataset.name);if(p)p.name=t.value;persist();}
+    if(t.dataset.config==='discussionMinutes'){config.discussionMinutes=Math.max(0,Math.min(30,Number(t.value)||0));markCustom();}
+  });
+  document.addEventListener('change',async event=>{
+    const t=event.target;
+    if(t.dataset.config&&t.type==='checkbox'){config[t.dataset.config]=t.checked;markCustom();if(t.dataset.config==='manual')settings('manual');render();}
+    if(t.dataset.list){const key=t.dataset.list;config[key]=t.checked?[...new Set([...config[key],t.dataset.id])]:config[key].filter(id=>id!==t.dataset.id);markCustom();render();}
+    if(t.dataset.assignment){const a=config.assignments[t.dataset.id]||(config.assignments[t.dataset.id]={});a[t.dataset.assignment]=t.value;markCustom();}
+    if(t.dataset.override){
+      const cfg=modalMode==='game-overrides'?overridesDraft:config,o=cfg.overrides[Number(t.dataset.index)],field=t.dataset.override;
+      if(field.startsWith('target')){o.targets=o.targets||[];o.targets[Number(field.slice(6))]=t.value;}
+      else if(field==='round')o.round=Math.max(modalMode==='game-overrides'?game.round+1:1,Math.min(999,Math.floor(Number(t.value)||1)));
+      else{o[field]=t.value;if(field==='operation'){o.targets=[];o.result='';}if(field==='player')o.targets=(o.targets||[]).map(id=>id===o.player?'':id);}
+      if(modalMode==='game-overrides')gameOverrides();else{markCustom();settings('manual');}
+    }
+    if(t.id==='config-file'&&t.files?.[0]){
+      try{
+        if(t.files[0].size>1024*1024)throw new Error('The configuration file is too large.');
+        const incoming=JSON.parse(await t.files[0].text());
+        if(incoming.format!=='quadruple-agent-config'||incoming.version!==1||!Array.isArray(incoming.roster)||incoming.roster.length<3||incoming.roster.length>9||!incoming.config)throw new Error('Choose a Quadruple Agent configuration export.');
+        const nextRoster=incoming.roster.map(p=>({id:String(p.id).slice(0,100),name:String(p.name).slice(0,30)}));
+        if(nextRoster.some(p=>!p.id||!p.name)||new Set(nextRoster.map(p=>p.id)).size!==nextRoster.length)throw new Error('The file contains invalid player entries.');
+        config=E.cleanConfig(incoming.config);roster=nextRoster;presetId='custom';persist();settings('presets');render();toast('Configuration imported');
+      }catch(err){toast(err.message||'Unable to read that file.');}
+    }
+  });
+  modal.addEventListener('close',()=>{overridesDraft=null;error='';});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&view==='playing'){revealed=false;if(modal.open)modal.close();render();persist();}});
+  window.addEventListener('pagehide',()=>{if(view==='playing'){revealed=false;render();}persist();});
+  window.addEventListener('pageshow',event=>{if(event.persisted&&view==='playing'){revealed=false;render();}});
+  setInterval(()=>{if(view==='playing'&&game?.phase==='discussion'&&$('timer')){$('timer').textContent=timerText();if(game.timer?.running&&remainingTime()===0){game.timer.running=false;game.timer.remaining=0;persist();render();}}},500);
+  // Expose public setup through WebMCP, never secret allegiances or individual votes.
+  if(document.modelContext?.registerTool){try{const lifecycle=new AbortController();window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});Promise.resolve(document.modelContext.registerTool({name:'read_quadruple_agent_setup',title:'Read game setup',description:'Read public setup and enabled operations without secret game state.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:true},execute(input){if(input&&Object.keys(input).length)throw new Error('This tool accepts no input fields.');return {title:'Quadruple Agent',players:roster.map(p=>p.name),startingParasites:config.parasites,parityVictory:config.parity,operations:config.operations.map(id=>find(C.operations,id).name)};}},{signal:lifecycle.signal})).catch(()=>{});}catch{}}
+  persist();render();
+})();
+
+</script>
+</body>
+</html>

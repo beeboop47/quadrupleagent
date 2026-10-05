@@ -1,0 +1,46 @@
+{
+  "format": "quadruple-agent-config",
+  "version": 1,
+  "name": "Group night",
+  "roster": [
+    {
+      "id": "p1",
+      "name": "Player 1"
+    },
+    {
+      "id": "p2",
+      "name": "Player 2"
+    },
+    {
+      "id": "p3",
+      "name": "Player 3"
+    },
+    {
+      "id": "p4",
+      "name": "Player 4"
+    }
+  ],
+  "config": {
+    "parasites": 1,
+    "parity": true,
+    "discussionMinutes": 3,
+    "operations": [
+      "tip",
+      "confession",
+      "intel",
+      "encounter",
+      "evidence",
+      "agenda",
+      "danish"
+    ],
+    "agendas": [
+      "scapegoat",
+      "infatuation",
+      "grudge"
+    ],
+    "specials": [],
+    "manual": false,
+    "assignments": {},
+    "overrides": []
+  }
+}
