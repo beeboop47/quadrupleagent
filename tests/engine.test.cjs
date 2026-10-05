@@ -19,13 +19,16 @@ test('Multiple starting Parasites recognise an immutable starting roster',()=>{
   operation(g,'transfer',initial[0]);const target=g.players.find(p=>p.team==='force');E.runOperation(g,{targets:[target.id]});assert.deepEqual(g.initialParasites,initial);
 });
 test('No random duplicate operations and no random duplicate special roles',()=>{
-  let foundNone=false;
   for(let n=3;n<=9;n++)for(let seed=1;seed<=30;seed++){
-    const g=E.createGame(roster(n),C.defaults,seeded(seed));E.finishBriefing(g);E.startRound(g,seeded(seed+90));
+    const g=E.createGame(roster(n),C.presets[0].config,seeded(seed));E.finishBriefing(g);E.startRound(g,seeded(seed+90));
     assert.equal(new Set(g.turns.map(t=>t.operation)).size,n);
-    for(const s of C.specials)assert(g.players.filter(p=>p.special===s.id).length<=1);
-    if(g.players.every(p=>!p.special))foundNone=true;
-  }assert(foundNone);
+    for(const s of C.specials)assert.equal(g.players.filter(p=>p.special===s.id).length,1);
+  }
+});
+test('Special roles default off and an enabled role is always assigned',()=>{
+  assert.deepEqual(C.defaults.specials,[]);assert(game().players.every(p=>!p.special));
+  for(let seed=1;seed<=50;seed++){const g=E.createGame(roster(),{...C.defaults,specials:['cover']},seeded(seed));assert.equal(g.players.filter(p=>p.special==='cover').length,1);}
+  assert.throws(()=>game({manual:true,specials:['cover'],assignments:Object.fromEntries(roster().map(p=>[p.id,{special:'none'}]))}),/available player/);
 });
 test('Manual special role consumes the random slot, duplicates require explicit assignment',()=>{
   const cfg={manual:true,specials:['cover'],assignments:{p1:{special:'cover'}}};

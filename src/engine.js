@@ -56,7 +56,8 @@
     for(const id of config.specials){
       if(players.some(p=>p.special===id))continue;
       const eligible=players.filter(p=>p.special===null);
-      if(eligible.length&&rng()<.5)shuffle(eligible,rng)[0].special=id;
+      if(!eligible.length)fail('An enabled special role needs an available player. Free a manual special-role assignment or disable that role.');
+      shuffle(eligible,rng)[0].special=id;
     }
     for(const p of players){if(p.special==='none')p.special=null;p.initialTeam=p.team;}
     validateRound(config,1,players);

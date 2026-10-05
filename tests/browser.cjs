@@ -11,7 +11,7 @@ const roster=Array.from({length:5},(_,i)=>({id:`p${i+1}`,name:['Alex','Blair','C
 const assignments=Object.fromEntries(roster.map((p,i)=>[p.id,{team:i===4?'parasites':'force',special:'none'}]));
 const click=(p,a)=>p.locator(`[data-action="${a}"]`).first().click();
 async function seed(p,config,game=null,people=roster){await p.evaluate(({KEY,roster,config,game})=>{localStorage.setItem(KEY,JSON.stringify({roster,config,game,customs:[],presetId:'custom'}));Storage.prototype.setItem=()=>{};},{KEY,roster:people,config,game});await p.reload();}
-async function brief(p,n=5){await click(p,'start');for(let i=0;i<n;i++){await click(p,'reveal');await click(p,'brief-next');}assert.match(await p.locator('#main').innerText(),/New round/);}
+async function brief(p,n=5){await click(p,'start');for(let i=0;i<n;i++){await click(p,'reveal');const text=await p.locator('#main').innerText();assert(!text.includes('Deep Cover Agent'));assert(!text.includes('Suspicious Agent'));assert(!text.includes('No special role'));await click(p,'brief-next');}assert.match(await p.locator('#main').innerText(),/New round/);}
 async function completeOps(p){
   let turns=0;
   while(await p.locator('[data-action="reveal"]').count()){
@@ -35,9 +35,12 @@ let debugPage;
 (async()=>{
   const browser=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});
   const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
+  await context.addInitScript(()=>localStorage.setItem('quadruple-agent.audio',JSON.stringify({enabled:false,volume:.28})));
   const page=await context.newPage();debugPage=page;page.setDefaultTimeout(8000);await page.emulateMedia({reducedMotion:'reduce'});const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(url);
   await page.screenshot({path:path.join(outputs,'setup-mobile.png'),fullPage:true});
   assert.equal(await page.title(),'Quadruple Agent');
+  assert.deepEqual(await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).config.specials,KEY),[]);
+  await page.locator('[data-action="preset"][data-id="full"]').click();assert.equal((await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).config.specials,KEY)).length,2);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.locator('[data-action="preset"][data-id="confident"]').click();
   const config=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).config,KEY);assert.equal(config.operations.length,7);assert.equal(config.specials.length,0);assert(!config.agendas.includes('sleeper'));
@@ -48,7 +51,7 @@ let debugPage;
   console.log('PASS presets save, reload, export and import');
   await click(page,'settings');await page.locator('[data-action="settings-tab"][data-tab="manual"]').click();await page.locator('#manual-toggle').check();await page.locator('[data-assignment="special"][data-id="p1"]').selectOption('cover');await page.locator('[data-assignment="special"][data-id="p2"]').selectOption('cover');await click(page,'override-add');await page.locator('[data-override="operation"]').selectOption('confession');await page.locator('[data-override="target0"]').selectOption('p2');await page.locator('[data-override="round"]').fill('2');await page.locator('[data-override="round"]').press('Tab');await click(page,'settings-done');
   let stored=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)),KEY);assert.equal(stored.config.assignments.p1.special,'cover');assert.equal(stored.config.assignments.p2.special,'cover');assert.equal(stored.config.overrides[0].round,2);assert.deepEqual(stored.config.overrides[0].targets,['p2']);console.log('PASS manual assignment controls');
-  const conf={...C.presets[1].config,manual:true,parity:false,assignments,overrides:[
+  const conf={...C.presets[1].config,manual:true,parity:false,assignments:{...assignments,p1:{team:'force',special:'cover'}},overrides:[
     {round:1,player:'p1',operation:'confession',targets:['p2']},
     {round:1,player:'p2',operation:'encounter',targets:['p5']},
     {round:1,player:'p3',operation:'evidence',targets:['p4'],result:'double'},
@@ -68,7 +71,7 @@ let debugPage;
   await click(page,'op-next');await completeOps(page);await click(page,'voting-start');
   const votes={p1:'p5',p2:'p5',p3:'p5',p5:'p1'};
   while(await page.locator('[data-action="reveal"]').count()){await click(page,'reveal');stored=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)),KEY);const voter=stored.game.voters[stored.game.cursor];await page.locator(`[data-action="target"][data-id="${votes[voter]}"]`).click();await click(page,'cast-vote');}
-  await click(page,'final-results');assert.match(await page.locator('#main').innerText(),/Force win/);assert.match(await page.locator('#main').innerText(),/Personal win secured: Operation Scapegoat/);await page.screenshot({path:path.join(outputs,'final-mobile.png'),fullPage:true});console.log('PASS game ends and personal results differ from team result');
+  await click(page,'final-results');assert.match(await page.locator('#main').innerText(),/Force win/);assert.match(await page.locator('#main').innerText(),/Personal win secured: Operation Scapegoat/);assert(!await page.locator('#main').innerText().then(t=>t.includes('Deep Cover Agent')));await page.screenshot({path:path.join(outputs,'final-mobile.png'),fullPage:true});console.log('PASS game ends, special roles stay hidden and personal results differ from team result');
   await click(page,'play-again');
   const otherOps={...conf,overrides:[
     {round:1,player:'p1',operation:'defector',result:'stay'},

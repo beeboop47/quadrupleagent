@@ -23,9 +23,9 @@
     {id:'cover',name:'Deep Cover Agent',description:'While you are a Parasite, information operations see you as Force.'}
   ];
   const all = list => list.map(x=>x.id);
-  const defaults = {parasites:1,parity:true,discussionMinutes:3,operations:all(operations),agendas:all(agendas),specials:all(specials),manual:false,assignments:{},overrides:[]};
+  const defaults = {parasites:1,parity:true,discussionMinutes:3,operations:all(operations),agendas:all(agendas),specials:[],manual:false,assignments:{},overrides:[]};
   const presets = [
-    {id:'full',name:'Full',description:'Every operation & special role',config:defaults},
+    {id:'full',name:'Full',description:'Every operation & special role',config:{...defaults,specials:all(specials)}},
     {id:'confident',name:'Confident',description:'Stable teams. Clean intelligence.',config:{...defaults,operations:all(operations).filter(id=>!['defector','transfer'].includes(id)),agendas:all(agendas).filter(id=>id!=='sleeper'),specials:[]}}
   ];
   const catalogue = {operations,agendas,specials,presets,defaults};
