@@ -10,8 +10,8 @@ function forceTeams(g,parasites=['p5']){g.players.forEach(p=>p.team=parasites.in
 function voting(g,votes){g.phase='discussion';E.startVoting(g);while(g.phase==='voting'){const id=g.voters[g.cursor];E.vote(g,votes[id]);}return g.tally;}
 
 test('Full and Confident contain exactly the requested content',()=>{
-  assert.equal(C.presets[0].config.operations.length,9);assert.equal(C.presets[0].config.specials.length,5);
-  const conf=C.presets[1].config;assert.equal(conf.operations.length,7);assert.deepEqual(conf.specials,[]);
+  assert.equal(C.presets[0].config.operations.length,17);assert.equal(C.presets[0].config.specials.length,5);
+  const conf=C.presets[1].config;assert.equal(conf.operations.length,15);assert.deepEqual(conf.specials,[]);
   assert(!conf.operations.includes('defector'));assert(!conf.operations.includes('transfer'));assert(!conf.agendas.includes('sleeper'));assert(conf.operations.includes('agenda'));
 });
 test('Multiple starting Parasites recognise an immutable starting roster',()=>{
@@ -124,7 +124,7 @@ test('Simulation completes legal rounds for every supported player count',()=>{
       E.startRound(g,rng);
       while(g.phase==='operations'){
         const t=E.prepareTurn(g,g.cursor,rng),op=C.operations.find(o=>o.id===t.operation);
-        E.runOperation(g,{targets:E.active(g).filter(p=>p.id!==t.player).slice(0,op.targets).map(p=>p.id),choice:t.operation==='evidence'?'double':'stay'},rng);E.finishTurn(g);
+        E.runOperation(g,{targets:E.active(g).filter(p=>op.allowSelf||p.id!==t.player).slice(0,op.targets).map(p=>p.id),choice:t.operation==='evidence'?'double':'stay'},rng);E.finishTurn(g);
       }
       if(g.phase==='ended')break;
       E.startVoting(g);

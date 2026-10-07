@@ -17,6 +17,7 @@
     cfg.parasites=Math.max(1,Math.min(8,Math.floor(Number(cfg.parasites)||1)));
     cfg.parity=cfg.parity!==false;cfg.manual=cfg.manual===true;
     cfg.singleRound=cfg.singleRound===true;
+    cfg.operationPhases=Math.max(1,Math.min(10,Math.floor(Number(cfg.operationPhases)||1)));
     cfg.discussionMinutes=Math.max(0,Math.min(30,Number(cfg.discussionMinutes)||0));
     cfg.assignments=cfg.assignments&&typeof cfg.assignments==='object'&&!Array.isArray(cfg.assignments)?cfg.assignments:{};
     cfg.overrides=Array.isArray(cfg.overrides)?cfg.overrides:[];
@@ -35,7 +36,7 @@
     if(config.operations.includes('agenda')&&!config.agendas.length&&overrides.filter(o=>o.operation==='agenda').length===0)fail('Enable at least one Hidden Agenda, or disable that operation.');
     for(const o of overrides){
       if(o.operation==='agenda'&&!config.agendas.length&&!lookup(C.agendas,o.result))fail('A guaranteed Hidden Agenda needs an enabled or explicitly assigned agenda.');
-      if(Array.isArray(o.targets)&&o.targets.includes(o.player))fail('An operation cannot target its own player.');
+      if(Array.isArray(o.targets)&&o.targets.includes(o.player)&&!lookup(C.operations,o.operation).allowSelf)fail('An operation cannot target its own player.');
     }
     return overrides;
   }
@@ -82,15 +83,23 @@
   function finishBriefing(g){if(g.phase!=='briefing')fail('Briefing is not active.');g.phase='round-ready';g.cursor=0;checkEnd(g);}
   function startRound(g,rng=Math.random){
     if(g.winner)fail('The game has already ended.');
-    if(!['round-ready','results'].includes(g.phase))fail('Finish the current round first.');
+    const continuation=g.phase==='discussion';
+    const phases=g.config.operationPhases||1;
+    if(continuation&&(g.operationCycle||1)>=phases)fail('All operation phases are complete. Begin voting.');
+    if(!['round-ready','results','discussion'].includes(g.phase))fail('Finish the current round first.');
     if(checkEnd(g))return;
     const alive=active(g);const round=g.round+1;const overrides=validateRound(g.config,round,alive);
     const pool=shuffle(g.config.operations.filter(id=>!overrides.some(o=>o.operation===id)),rng);
     const turns=alive.map(p=>{const override=overrides.find(o=>o.player===p.id);return {player:p.id,operation:override?override.operation:pool.pop(),override:override?clone(override):null,targets:null,result:null,done:false};});
-    g.round=round;g.phase='operations';g.cursor=0;g.turns=turns;g.effects={};g.votes={};g.voters=[];g.tally=null;
+    g.operationCycle=continuation?(g.operationCycle||1)+1:1;
+    g.votingRound=continuation?(g.votingRound||1):(g.votingRound||0)+1;
+    if(!continuation){g.effects={};g.publicOperations=[];}
+    g.publicOperations=g.publicOperations||[];
+    g.publicOperations.push({cycle:g.operationCycle,turns:turns.map(t=>({player:t.player,operation:t.operation}))});
+    g.round=round;g.phase='operations';g.cursor=0;g.turns=turns;g.votes={};g.voters=[];g.tally=null;
   }
-  function resolveTargets(g,actor,count,requested=[],rng=Math.random){
-    const eligible=active(g).filter(p=>p.id!==actor).map(p=>p.id);
+  function resolveTargets(g,actor,count,requested=[],rng=Math.random,allowSelf=false){
+    const eligible=active(g).filter(p=>allowSelf||p.id!==actor).map(p=>p.id);
     const chosen=[...new Set((Array.isArray(requested)?requested:[]).filter(id=>eligible.includes(id)))].slice(0,count);
     chosen.push(...shuffle(eligible.filter(id=>!chosen.includes(id)),rng).slice(0,count-chosen.length));
     if(chosen.length<count)fail('There are not enough active targets for this operation.');
@@ -99,7 +108,7 @@
   function prepareTurn(g,index=g.cursor,rng=Math.random){
     if(g.phase!=='operations'||index!==g.cursor)fail('This operation is not the current turn.');
     const turn=g.turns[index];const op=lookup(C.operations,turn.operation);
-    if(turn.targets===null&&(op.kind==='random'||(turn.override&&turn.override.targets&&turn.override.targets.length)))turn.targets=resolveTargets(g,turn.player,op.targets,turn.override?.targets,rng);
+    if(turn.targets===null&&(op.kind==='random'||(turn.override&&turn.override.targets&&turn.override.targets.length)))turn.targets=resolveTargets(g,turn.player,op.targets,turn.override?.targets,rng,op.allowSelf);
     return turn;
   }
   function switchTeam(p,team,asDefector=false){
@@ -109,9 +118,9 @@
   function runOperation(g,{targets=[],choice=null}={},rng=Math.random){
     const turn=prepareTurn(g,g.cursor,rng);if(turn.done)fail('This operation is already complete.');
     const op=lookup(C.operations,turn.operation);const p=player(g,turn.player);
-    const forced=turn.override?.result||null;
-    const picked=turn.targets!==null?turn.targets:resolveTargets(g,p.id,op.targets,targets,rng);
-    if(op.kind==='choose'&&turn.targets===null&&(!Array.isArray(targets)||targets.length!==op.targets||new Set(targets).size!==targets.length||targets.some(id=>!active(g).some(t=>t.id===id&&id!==p.id))))fail(`Choose ${op.targets} different active player${op.targets===1?'':'s'}.`);
+    const forced=turn.override?.result??null;
+    const picked=turn.targets!==null?turn.targets:resolveTargets(g,p.id,op.targets,targets,rng,op.allowSelf);
+    if(op.kind==='choose'&&turn.targets===null&&(!Array.isArray(targets)||targets.length!==op.targets||new Set(targets).size!==targets.length||targets.some(id=>!active(g).some(t=>t.id===id&&(op.allowSelf||id!==p.id)))))fail(`Choose ${op.targets} different active player${op.targets===1?'':'s'}.`);
     turn.targets=picked;const people=picked.map(id=>player(g,id));let result;
     const seenTeam=target=>hasSpecial(p,'counterintel')?target.team:apparent(target);
     const invert=answer=>hasSpecial(p,'source')?!answer:answer;
@@ -126,6 +135,33 @@
         result={type:'presence',parasite:['yes','no'].includes(forced)?forced==='yes':invert(group.some(t=>seenTeam(t)==='parasites')),targets:picked};break;
       }
       case 'danish':result={type:'match',same:['same','different'].includes(forced)?forced==='same':invert(seenTeam(people[0])===seenTeam(people[1])),targets:picked};break;
+      case 'majority':{
+        const natural=people.filter(t=>seenTeam(t)==='parasites').length>=2?'parasites':'force';
+        result={type:'majority',team:['force','parasites'].includes(forced)?forced:hasSpecial(p,'source')?other(natural):natural,targets:picked};break;
+      }
+      case 'chain':result={type:'match',same:['same','different'].includes(forced)?forced==='same':invert(seenTeam(p)===seenTeam(people[0])),targets:[p.id,...picked]};break;
+      case 'threat':result={type:'threat',opposing:['yes','no'].includes(forced)?forced==='yes':invert(people.some(t=>seenTeam(t)!==p.team)),targets:picked};break;
+      case 'cross':{
+        const eligible=active(g).filter(t=>t.id!==p.id&&t.id!==picked[0]);
+        const extra=eligible.find(t=>t.id===turn.override?.targets?.[1])||shuffle(eligible,rng)[0];if(!extra)fail('Cross-Reference needs a third active player.');
+        result={type:'match',same:['same','different'].includes(forced)?forced==='same':invert(seenTeam(people[0])===seenTeam(extra)),targets:[...picked,extra.id]};break;
+      }
+      case 'audit':{
+        const alive=active(g),natural=alive.filter(t=>seenTeam(t)==='parasites').length;
+        const count=forced!==null&&/^\d+$/.test(String(forced))?Number(forced):hasSpecial(p,'source')?alive.length-natural:natural;
+        if(count>alive.length)fail('Internal Audit count cannot exceed the active player count.');
+        result={type:'audit',count,total:alive.length,targets:[]};break;
+      }
+      case 'background':case 'loyalties':{
+        const target=people[0];const natural=op.id==='background'?!!target.special||!!target.specials?.length:!!target.agenda||!!target.secured?.length;
+        result={type:'fact',fact:op.id,answer:['yes','no'].includes(forced)?forced==='yes':invert(natural),targets:picked};break;
+      }
+      case 'personnel':{
+        const target=people[0],facts=[{key:'team',positive:'They are Force.',negative:'They are a Parasite.',truth:seenTeam(target)==='force'},{key:'special',positive:'They have a hidden special role.',negative:'They have no hidden special role.',truth:!!target.special||!!target.specials?.length},{key:'agenda',positive:'They have a personal victory condition or secured personal win.',negative:'They follow their team’s usual victory condition.',truth:!!target.agenda||!!target.secured?.length}];
+        const selected=shuffle(facts,rng).slice(0,2);const corrupted=forced==='false'||hasSpecial(p,'source')&&!['normal','true'].includes(forced);
+        const statements=selected.map((fact,i)=>{const truthful=forced==='true'||!corrupted&&i===0;return truthful===fact.truth?fact.positive:fact.negative;});
+        result={type:'personnel',statements:shuffle(statements,rng),targets:picked};break;
+      }
       case 'evidence':{
         const effect=['shield','double'].includes(forced)?forced:choice;
         if(!['shield','double'].includes(effect))fail('Choose protection or a double vote.');
@@ -163,6 +199,7 @@
   }
   function startVoting(g){
     if(g.phase!=='discussion')fail('Voting follows discussion.');
+    if((g.operationCycle||1)<(g.config.operationPhases||1))fail('Complete all operation phases before voting.');
     g.voters=active(g).filter(p=>!(p.team==='force'&&p.defector==='force')).map(p=>p.id);g.cursor=0;g.phase='voting';
     if(!g.voters.length)resolveVotes(g);
   }

@@ -20,7 +20,7 @@ async function completeOps(p){
       const targets=p.locator('[data-action="target"]');
       if(await targets.count()){
         const text=await p.locator('#main').innerText();await targets.nth(0).click();
-        if(text.includes('Choose two players'))await p.locator('[data-action="target"]').nth(1).click();
+        const count=Number(/Choose (\d+) players?/.exec(text)?.[1]||1);for(let i=1;i<count;i++)await p.locator('[data-action="target"]').nth(i).click();
       }
       const choices=p.locator('[data-action="choice"]:not([disabled])');if(await choices.count())await choices.first().click();
       await click(p,'operate');
@@ -44,7 +44,7 @@ let debugPage;
   await page.locator('[data-action="preset"][data-id="full"]').click();assert.equal((await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).config.specials,KEY)).length,5);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.locator('[data-action="preset"][data-id="confident"]').click();
-  const config=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).config,KEY);assert.equal(config.operations.length,7);assert.equal(config.specials.length,0);assert(!config.agendas.includes('sleeper'));
+  const config=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)).config,KEY);assert.equal(config.operations.length,15);assert.equal(config.specials.length,0);assert(!config.agendas.includes('sleeper'));
   await click(page,'presets');await page.locator('#preset-name').fill('Group night');await click(page,'save-custom');
   await page.reload();await click(page,'presets');assert.match(await page.locator('#modal-body').innerText(),/Group night/);
   const downloadPromise=page.waitForEvent('download');await click(page,'export');const download=await downloadPromise;const exportPath=path.join(outputs,'exported-config.json');await download.saveAs(exportPath);assert.equal(JSON.parse(fs.readFileSync(exportPath)).format,'quadruple-agent-config');
@@ -87,6 +87,14 @@ let debugPage;
   await seed(page,smallConfig,null,three);await brief(page,3);await click(page,'round-start');await completeOps(page);await click(page,'voting-start');
   for(const id of ['p2','p1','p2']){await click(page,'reveal');await page.locator(`[data-action="target"][data-id="${id}"]`).click();await click(page,'cast-vote');}
   assert.match(await page.locator('#main').innerText(),/Two or fewer players/);await click(page,'final-results');assert.match(await page.locator('#main').innerText(),/Parasites win/);console.log('PASS mandatory two-player ending with parity disabled');await click(page,'play-again');
+  for(const ids of [['majority','chain','threat','cross','audit'],['background','loyalties','personnel','tip','danish']]){
+    const cfg={...C.defaults,manual:true,parity:false,assignments,overrides:ids.map((operation,i)=>({round:1,player:roster[i].id,operation,targets:[],result:''}))};
+    await seed(page,cfg);await brief(page);await click(page,'round-start');
+    const publicList=page.locator('details').first();await publicList.locator('summary').click();const text=await publicList.innerText();for(const id of ids)assert(text.includes(C.operations.find(o=>o.id===id).name));assert.equal(await page.locator('.secret').count(),0);
+    assert.equal(await completeOps(page),5);assert.match(await page.locator('#main').innerText(),/Compare stories/);
+  }console.log('PASS all eight new operation interfaces and public assignments without private results');
+  const cycleConfig={...C.defaults,manual:true,singleRound:true,operationPhases:2,assignments,overrides:[1,2].flatMap(round=>['majority','chain','threat','cross','audit'].map((operation,i)=>({round,player:roster[i].id,operation,targets:[],result:''})))};
+  await seed(page,cycleConfig);await brief(page);await click(page,'round-start');await completeOps(page);assert.equal(await page.locator('[data-action="voting-start"]').count(),0);await page.reload();await click(page,'resume');assert.equal(await page.locator('[data-action="voting-start"]').count(),0);await click(page,'round-start');await completeOps(page);assert.equal(await page.locator('[data-action="voting-start"]').count(),1);const cycleStored=await page.evaluate(KEY=>JSON.parse(localStorage.getItem(KEY)),KEY);assert.equal(cycleStored.game.publicOperations.flatMap(p=>p.turns).length,10);assert.equal(cycleStored.game.operationCycle,2);console.log('PASS two operation cycles before voting, concealed resume and retained public assignments');
   const singleConfig={...C.defaults,singleRound:true};const singleGame=E.createGame(roster,singleConfig);singleGame.players.forEach(p=>p.team=['p4','p5'].includes(p.id)?'parasites':'force');singleGame.round=1;singleGame.phase='discussion';
   await seed(page,singleConfig,singleGame);await click(page,'resume');await click(page,'voting-start');
   for(const id of ['p5','p5','p5','p5','p1']){await click(page,'reveal');await page.locator(`[data-action="target"][data-id="${id}"]`).click();await click(page,'cast-vote');}

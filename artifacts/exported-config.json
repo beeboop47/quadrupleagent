@@ -24,6 +24,7 @@
     "parasites": 1,
     "parity": true,
     "singleRound": false,
+    "operationPhases": 1,
     "discussionMinutes": 3,
     "operations": [
       "tip",
@@ -32,7 +33,15 @@
       "encounter",
       "evidence",
       "agenda",
-      "danish"
+      "danish",
+      "majority",
+      "chain",
+      "threat",
+      "cross",
+      "audit",
+      "background",
+      "loyalties",
+      "personnel"
     ],
     "agendas": [
       "scapegoat",
